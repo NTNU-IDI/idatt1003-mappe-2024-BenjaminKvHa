@@ -1,8 +1,12 @@
 package edu.ntnu.idi.idatt;
 
+import edu.ntnu.idi.idatt.ui.UserInterface;
+
 public class Main {
 
   public static void main(String[] args) {
-    System.out.println("Hello world!");
+    UserInterface ui = new UserInterface();
+    ui.init();
+    ui.start();
   }
 }
