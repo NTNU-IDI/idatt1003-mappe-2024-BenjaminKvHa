@@ -6,7 +6,6 @@ import edu.ntnu.idi.idatt.ui.UserInterface;
  * Main class.
  */
 public class Main {
-
   /**
    * The main method to run the application.
    */
