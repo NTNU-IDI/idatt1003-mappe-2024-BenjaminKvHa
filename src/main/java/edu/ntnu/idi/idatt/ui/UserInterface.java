@@ -8,7 +8,11 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * UserInterface class.
+ * Handles user interactions and provides a text-based user interface for the application.
+ * <p>
+ * This class manages the input and output operations with the user, allowing them to
+ * create ingredients, list all ingredients, and perform other actions as defined.
+ * </p>
  */
 public class UserInterface {
 
@@ -16,13 +20,21 @@ public class UserInterface {
 
   /**
    * Initializes the user interface.
+   * <p>
+   * This method sets up any necessary data structures or variables before the
+   * user interface starts interacting with the user.
+   * </p>
    */
   public void init() {
     ingredientList = new ArrayList<>();
   }
 
   /**
-   * Starts the user interface.
+   * Starts the user interface and handles the main menu loop.
+   * <p>
+   * This method displays the menu options to the user, processes their input,
+   * and calls the appropriate methods based on the user's choices.
+   * </p>
    */
   public void start() {
     Scanner scanner = new Scanner(System.in);
@@ -59,7 +71,14 @@ public class UserInterface {
   }
 
   /**
-   * Creates an Ingredient based on user input.
+   * Creates an {@code Ingredient} based on user input.
+   * <p>
+   * This method prompts the user for the ingredient's name, quantity, unit,
+   * best-before date, and price per unit. It validates the input and constructs
+   * an {@code Ingredient} object if all inputs are valid.
+   * </p>
+   *
+   * @return the created {@code Ingredient}, or {@code null} if creation failed
    */
   public Ingredient createIngredient() {
     Scanner scanner = new Scanner(System.in);
@@ -69,6 +88,7 @@ public class UserInterface {
     LocalDate bestBeforeDate;
     double pricePerUnit;
 
+    // Read and validate name
     while (true) {
       System.out.print("Enter ingredient name: ");
       name = scanner.nextLine().trim();
@@ -78,6 +98,7 @@ public class UserInterface {
       System.out.println("Name cannot be empty. Please try again.");
     }
 
+    // Read and validate quantity
     while (true) {
       System.out.print("Enter quantity: ");
       String quantityInput = scanner.nextLine().trim();
@@ -93,6 +114,7 @@ public class UserInterface {
       }
     }
 
+    // Read and validate unit
     while (true) {
       System.out.print("Enter unit of measurement: ");
       unit = scanner.nextLine().trim();
@@ -102,6 +124,7 @@ public class UserInterface {
       System.out.println("Unit cannot be empty. Please try again.");
     }
 
+    // Read and validate best-before date
     while (true) {
       System.out.print("Enter best-before date (YYYY-MM-DD): ");
       String dateInput = scanner.nextLine().trim();
@@ -117,6 +140,7 @@ public class UserInterface {
       }
     }
 
+    // Read and validate price per unit
     while (true) {
       System.out.print("Enter price per unit (NOK): ");
       String priceInput = scanner.nextLine().trim();
@@ -144,6 +168,10 @@ public class UserInterface {
 
   /**
    * Lists all ingredients stored in the ingredient list.
+   * <p>
+   * This method displays all the ingredients that have been added to the list.
+   * If the list is empty, it informs the user accordingly.
+   * </p>
    */
   public void listAllIngredients() {
     if (ingredientList.isEmpty()) {
