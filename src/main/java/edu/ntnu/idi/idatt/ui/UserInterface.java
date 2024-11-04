@@ -1,40 +1,47 @@
 package edu.ntnu.idi.idatt.ui;
 
+import edu.ntnu.idi.idatt.model.Cookbook;
 import edu.ntnu.idi.idatt.model.FoodInventory;
 import edu.ntnu.idi.idatt.model.Ingredient;
+import edu.ntnu.idi.idatt.model.Recipe;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
  * Handles user interactions and provides a text-based user interface for the application.
  * <p>
- * This class manages the input and output operations with the user, allowing them to interact with
- * the food inventory system.
+ * This class manages the input and output operations with the user, allowing them to
+ * interact with the food inventory and cookbook system.
  * </p>
  */
 public class UserInterface {
 
   private FoodInventory foodInventory;
+  private Cookbook cookbook;
 
   /**
    * Initializes the user interface.
    * <p>
-   * This method sets up any necessary data structures or variables before the user interface starts
-   * interacting with the user.
+   * This method sets up any necessary data structures or variables before the
+   * user interface starts interacting with the user.
    * </p>
    */
   public void init() {
     foodInventory = new FoodInventory();
+    cookbook = new Cookbook();
     populateSampleIngredients();
+    populateSampleRecipes();
   }
 
   /**
    * Starts the user interface and handles the main menu loop.
    * <p>
-   * This method displays the menu options to the user, processes their input, and calls the
-   * appropriate methods based on the user's choices.
+   * This method displays the menu options to the user, processes their input,
+   * and calls the appropriate methods based on the user's choices.
    * </p>
    */
   public void start() {
@@ -42,13 +49,18 @@ public class UserInterface {
     boolean running = true;
 
     while (running) {
-      System.out.println("\n--- Food Inventory Manager ---");
+      System.out.println("\n--- Food Inventory and Cookbook Manager ---");
       System.out.println("1. Add new ingredient");
       System.out.println("2. List all ingredients");
       System.out.println("3. Find ingredient by name");
       System.out.println("4. Remove quantity from ingredient");
       System.out.println("5. List ingredients expiring before a date");
-      System.out.println("6. Exit");
+      System.out.println("6. Add new recipe");
+      System.out.println("7. List all recipes");
+      System.out.println("8. Find recipe by name");
+      System.out.println("9. Check if a recipe can be made");
+      System.out.println("10. Get recipes that can be made with current inventory");
+      System.out.println("11. Exit");
       System.out.print("Choose an option: ");
 
       String choice = scanner.nextLine().trim();
@@ -70,6 +82,21 @@ public class UserInterface {
           listIngredientsExpiringBeforeDate();
           break;
         case "6":
+          addNewRecipe();
+          break;
+        case "7":
+          listAllRecipes();
+          break;
+        case "8":
+          findRecipeByName();
+          break;
+        case "9":
+          checkIfRecipeCanBeMade();
+          break;
+        case "10":
+          getRecipesCanBeMade();
+          break;
+        case "11":
           running = false;
           System.out.println("Exiting the application. Goodbye!");
           break;
@@ -83,15 +110,54 @@ public class UserInterface {
    * Populates the food inventory with sample ingredients.
    */
   private void populateSampleIngredients() {
-    Ingredient milk = new Ingredient("Milk", 2.0, "liter", LocalDate.now().plusDays(5), 20.0);
+    Ingredient milk = new Ingredient("Milk", 50.0, "liter", LocalDate.now().plusDays(5), 20.0);
     Ingredient bread = new Ingredient("Bread", 1.0, "loaf", LocalDate.now().plusDays(2), 25.0);
     Ingredient eggs = new Ingredient("Eggs", 12, "pieces", LocalDate.now().plusDays(10), 3.0);
-    Ingredient cheese = new Ingredient("Cheese", 0.5, "kg", LocalDate.now().plusDays(15), 50.0);
+    Ingredient cheese = new Ingredient("Cheese", 50, "kg", LocalDate.now().plusDays(15), 50.0);
+    Ingredient flour = new Ingredient("Flour", 1.0, "kg", LocalDate.now().plusDays(30), 15.0);
+    Ingredient sugar = new Ingredient("Sugar", 0.5, "kg", LocalDate.now().plusDays(365), 10.0);
 
     foodInventory.addIngredient(milk);
     foodInventory.addIngredient(bread);
     foodInventory.addIngredient(eggs);
     foodInventory.addIngredient(cheese);
+    foodInventory.addIngredient(flour);
+    foodInventory.addIngredient(sugar);
+  }
+
+  /**
+   * Populates the cookbook with sample recipes.
+   */
+  private void populateSampleRecipes() {
+    // Pancake recipe
+    Recipe pancakeRecipe = new Recipe(
+        "Pancakes",
+        "Fluffy pancakes",
+        "Mix ingredients and cook on a pan.",
+        4
+    );
+    pancakeRecipe.addIngredient("Flour", 200);
+    pancakeRecipe.addIngredient("Milk", 300);
+    pancakeRecipe.addIngredient("Eggs", 2);
+    pancakeRecipe.addIngredient("Sugar", 50);
+
+    // Omelette recipe
+    Recipe omeletteRecipe = new Recipe(
+        "Omelette",
+        "Simple omelette",
+        "Break eggs and cook on a pan.",
+        2
+    );
+    omeletteRecipe.addIngredient("Eggs", 3);
+    omeletteRecipe.addIngredient("Cheese", 50);
+    omeletteRecipe.addIngredient("Milk", 50);
+
+    try {
+      cookbook.addRecipe(pancakeRecipe);
+      cookbook.addRecipe(omeletteRecipe);
+    } catch (IllegalArgumentException e) {
+      System.out.println("Error adding sample recipes: " + e.getMessage());
+    }
   }
 
   /**
@@ -206,11 +272,191 @@ public class UserInterface {
   }
 
   /**
+   * Adds a new recipe to the cookbook based on user input.
+   */
+  private void addNewRecipe() {
+    Scanner scanner = new Scanner(System.in);
+
+    // Read and validate name
+    System.out.print("Enter recipe name: ");
+    String name = scanner.nextLine().trim();
+    if (name.isEmpty()) {
+      System.out.println("Name cannot be empty.");
+      return;
+    }
+
+    // Read and validate description
+    System.out.print("Enter a short description: ");
+    String description = scanner.nextLine().trim();
+    if (description.isEmpty()) {
+      System.out.println("Description cannot be empty.");
+      return;
+    }
+
+    // Read and validate preparation method
+    System.out.print("Enter the preparation method: ");
+    String preparationMethod = scanner.nextLine().trim();
+    if (preparationMethod.isEmpty()) {
+      System.out.println("Preparation method cannot be empty.");
+      return;
+    }
+
+    // Read and validate servings
+    System.out.print("Enter the number of servings: ");
+    String servingsInput = scanner.nextLine().trim();
+    int servings;
+    try {
+      servings = Integer.parseInt(servingsInput);
+      if (servings <= 0) {
+        System.out.println("Servings must be positive.");
+        return;
+      }
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid number format.");
+      return;
+    }
+
+    Recipe recipe;
+    try {
+      recipe = new Recipe(name, description, preparationMethod, servings);
+    } catch (IllegalArgumentException e) {
+      System.out.println("Error creating recipe: " + e.getMessage());
+      return;
+    }
+
+    // Add ingredients
+    System.out.println("Add ingredients to the recipe.");
+    boolean addingIngredients = true;
+    while (addingIngredients) {
+      System.out.print("Enter ingredient name (or 'done' to finish): ");
+      String ingredientName = scanner.nextLine().trim();
+      if (ingredientName.equalsIgnoreCase("done")) {
+        addingIngredients = false;
+        continue;
+      }
+      if (ingredientName.isEmpty()) {
+        System.out.println("Ingredient name cannot be empty.");
+        continue;
+      }
+      System.out.print("Enter quantity required: ");
+      String quantityInput = scanner.nextLine().trim();
+      double quantity;
+      try {
+        quantity = Double.parseDouble(quantityInput);
+        if (quantity <= 0) {
+          System.out.println("Quantity must be positive.");
+          continue;
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Invalid number format.");
+        continue;
+      }
+      try {
+        recipe.addIngredient(ingredientName, quantity);
+      } catch (IllegalArgumentException e) {
+        System.out.println("Error adding ingredient: " + e.getMessage());
+      }
+    }
+
+    try {
+      cookbook.addRecipe(recipe);
+      System.out.println("Recipe added to the cookbook.");
+    } catch (IllegalArgumentException e) {
+      System.out.println("Error adding recipe: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Lists all recipes in the cookbook.
+   */
+  private void listAllRecipes() {
+    List<Recipe> recipes = cookbook.getAllRecipes();
+    if (recipes.isEmpty()) {
+      System.out.println("No recipes in the cookbook.");
+    } else {
+      System.out.println("\n--- List of Recipes ---");
+      for (Recipe recipe : recipes) {
+        System.out.println("- " + recipe.getName() + ": " + recipe.getDescription());
+      }
+    }
+  }
+
+  /**
+   * Finds a recipe by name based on user input.
+   */
+  private void findRecipeByName() {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter the name of the recipe to find: ");
+    String name = scanner.nextLine().trim();
+
+    if (name.isEmpty()) {
+      System.out.println("Name cannot be empty.");
+      return;
+    }
+
+    Recipe recipe = cookbook.findRecipeByName(name);
+    if (recipe != null) {
+      System.out.println("\nRecipe found:");
+      System.out.println("Name: " + recipe.getName());
+      System.out.println("Description: " + recipe.getDescription());
+      System.out.println("Preparation Method: " + recipe.getPreparationMethod());
+      System.out.println("Servings: " + recipe.getServings());
+      System.out.println("Ingredients:");
+      for (Map.Entry<String, Double> entry : recipe.getIngredients().entrySet()) {
+        System.out.println("- " + entry.getKey() + ": " + entry.getValue());
+      }
+    } else {
+      System.out.println("Recipe not found in the cookbook.");
+    }
+  }
+
+  /**
+   * Checks if a recipe can be made with the current inventory.
+   */
+  private void checkIfRecipeCanBeMade() {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter the name of the recipe to check: ");
+    String name = scanner.nextLine().trim();
+
+    if (name.isEmpty()) {
+      System.out.println("Name cannot be empty.");
+      return;
+    }
+
+    Recipe recipe = cookbook.findRecipeByName(name);
+    if (recipe != null) {
+      boolean canBeMade = recipe.canBeMadeFromInventory(foodInventory);
+      if (canBeMade) {
+        System.out.println("You have all the necessary ingredients to make \"" + recipe.getName() + "\".");
+      } else {
+        System.out.println("You do not have all the necessary ingredients to make \"" + recipe.getName() + "\".");
+      }
+    } else {
+      System.out.println("Recipe not found in the cookbook.");
+    }
+  }
+
+  /**
+   * Gets and displays recipes that can be made with the current inventory.
+   */
+  private void getRecipesCanBeMade() {
+    List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(foodInventory);
+    if (availableRecipes.isEmpty()) {
+      System.out.println("No recipes can be made with the current inventory.");
+    } else {
+      System.out.println("\n--- Recipes that can be made ---");
+      for (Recipe recipe : availableRecipes) {
+        System.out.println("- " + recipe.getName());
+      }
+    }
+  }
+
+  /**
    * Creates an {@code Ingredient} based on user input.
    * <p>
-   * This method prompts the user for the ingredient's name, quantity, unit, best-before date, and
-   * price per unit. It validates the input and constructs an {@code Ingredient} object if all
-   * inputs are valid.
+   * This method prompts the user for the ingredient's name, quantity, unit,
+   * best-before date, and price per unit. It validates the input and constructs
+   * an {@code Ingredient} object if all inputs are valid.
    * </p>
    *
    * @return the created {@code Ingredient}, or {@code null} if creation failed
