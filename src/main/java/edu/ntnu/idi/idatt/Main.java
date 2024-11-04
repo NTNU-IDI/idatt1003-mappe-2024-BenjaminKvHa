@@ -5,8 +5,8 @@ import edu.ntnu.idi.idatt.ui.UserInterface;
 /**
  * The entry point of the application.
  * <p>
- * This class contains the {@code main} method which starts the application
- * by initializing and starting the user interface.
+ * This class contains the {@code main} method which starts the application by initializing and
+ * starting the user interface.
  * </p>
  */
 public class Main {

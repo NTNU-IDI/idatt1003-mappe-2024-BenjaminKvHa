@@ -4,11 +4,10 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 /**
- * Represents an ingredient with a name, quantity, unit of measurement,
- * best-before date, and price per unit in NOK.
+ * Represents an ingredient with a name, quantity, unit of measurement, best-before date, and price
+ * per unit in NOK.
  * <p>
- * This class models the properties and behaviors of a grocery item
- * in the inventory system.
+ * This class models the properties and behaviors of a grocery item in the inventory system.
  * </p>
  */
 public class Ingredient {
@@ -20,14 +19,14 @@ public class Ingredient {
   private final double pricePerUnit;
 
   /**
-   * Constructs an {@code Ingredient} with the specified name, quantity, unit,
-   * best-before date, and price per unit.
+   * Constructs an {@code Ingredient} with the specified name, quantity, unit, best-before date, and
+   * price per unit.
    *
-   * @param name            the name of the ingredient; cannot be null or empty
-   * @param quantity        the quantity of the ingredient; must be positive
-   * @param unit            the unit of measurement; cannot be null or empty
-   * @param bestBeforeDate  the best-before date; cannot be null
-   * @param pricePerUnit    the price per unit in NOK; must be positive
+   * @param name           the name of the ingredient; cannot be null or empty
+   * @param quantity       the quantity of the ingredient; must be positive
+   * @param unit           the unit of measurement; cannot be null or empty
+   * @param bestBeforeDate the best-before date; cannot be null
+   * @param pricePerUnit   the price per unit in NOK; must be positive
    * @throws IllegalArgumentException if any validation rules are violated
    */
   public Ingredient(String name, double quantity, String unit, LocalDate bestBeforeDate,

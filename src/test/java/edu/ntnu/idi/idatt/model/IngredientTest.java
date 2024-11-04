@@ -1,14 +1,17 @@
 package edu.ntnu.idi.idatt.model;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.time.LocalDate;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link Ingredient} class.
  * <p>
- * This class contains test methods that verify the functionality of the
- * {@code Ingredient} class, including both positive and negative test cases.
+ * This class contains test methods that verify the functionality of the {@code Ingredient} class,
+ * including both positive and negative test cases.
  * </p>
  */
 class IngredientTest {
@@ -51,7 +54,8 @@ class IngredientTest {
   }
 
   /**
-   * Tests that an exception is thrown when creating an {@code Ingredient} with an invalid quantity.
+   * Tests that an exception is thrown when creating an {@code Ingredient} with an invalid
+   * quantity.
    */
   @Test
   void testConstructorInvalidQuantity() {
@@ -85,7 +89,8 @@ class IngredientTest {
   }
 
   /**
-   * Tests that an exception is thrown when creating an {@code Ingredient} with a null best-before date.
+   * Tests that an exception is thrown when creating an {@code Ingredient} with a null best-before
+   * date.
    */
   @Test
   void testConstructorInvalidBestBeforeDate() {
@@ -102,7 +107,8 @@ class IngredientTest {
   }
 
   /**
-   * Tests that an exception is thrown when creating an {@code Ingredient} with an invalid price per unit.
+   * Tests that an exception is thrown when creating an {@code Ingredient} with an invalid price per
+   * unit.
    */
   @Test
   void testConstructorInvalidPricePerUnit() {
@@ -123,7 +129,8 @@ class IngredientTest {
    */
   @Test
   void testGetName() {
-    Ingredient ingredient = new Ingredient("Salt", 500, "grams", LocalDate.now().plusDays(365), 1.0);
+    Ingredient ingredient = new Ingredient("Salt", 500, "grams", LocalDate.now().plusDays(365),
+        1.0);
 
     String name = ingredient.getName();
 
@@ -135,7 +142,8 @@ class IngredientTest {
    */
   @Test
   void testGetQuantity() {
-    Ingredient ingredient = new Ingredient("Sugar", 1000, "grams", LocalDate.now().plusDays(180), 2.0);
+    Ingredient ingredient = new Ingredient("Sugar", 1000, "grams", LocalDate.now().plusDays(180),
+        2.0);
 
     double quantity = ingredient.getQuantity();
 
@@ -147,7 +155,8 @@ class IngredientTest {
    */
   @Test
   void testSetQuantityValid() {
-    Ingredient ingredient = new Ingredient("Sugar", 500, "grams", LocalDate.now().plusDays(180), 2.0);
+    Ingredient ingredient = new Ingredient("Sugar", 500, "grams", LocalDate.now().plusDays(180),
+        2.0);
 
     ingredient.setQuantity(750);
 
@@ -159,7 +168,8 @@ class IngredientTest {
    */
   @Test
   void testSetQuantityInvalid() {
-    Ingredient ingredient = new Ingredient("Sugar", 500, "grams", LocalDate.now().plusDays(180), 2.0);
+    Ingredient ingredient = new Ingredient("Sugar", 500, "grams", LocalDate.now().plusDays(180),
+        2.0);
 
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       ingredient.setQuantity(-200);
@@ -172,7 +182,8 @@ class IngredientTest {
    */
   @Test
   void testGetUnit() {
-    Ingredient ingredient = new Ingredient("Butter", 250, "grams", LocalDate.now().plusDays(30), 15.0);
+    Ingredient ingredient = new Ingredient("Butter", 250, "grams", LocalDate.now().plusDays(30),
+        15.0);
 
     String unit = ingredient.getUnit();
 
@@ -235,8 +246,10 @@ class IngredientTest {
    */
   @Test
   void testEqualsAndHashCode() {
-    Ingredient ingredient1 = new Ingredient("Flour", 1000, "grams", LocalDate.now().plusDays(120), 4.0);
-    Ingredient ingredient2 = new Ingredient("Flour", 500, "grams", LocalDate.now().plusDays(90), 4.0);
+    Ingredient ingredient1 = new Ingredient("Flour", 1000, "grams", LocalDate.now().plusDays(120),
+        4.0);
+    Ingredient ingredient2 = new Ingredient("Flour", 500, "grams", LocalDate.now().plusDays(90),
+        4.0);
 
     assertEquals(ingredient1, ingredient2);
     assertEquals(ingredient1.hashCode(), ingredient2.hashCode());
@@ -247,8 +260,10 @@ class IngredientTest {
    */
   @Test
   void testEqualsDifferentName() {
-    Ingredient ingredient1 = new Ingredient("Flour", 1000, "grams", LocalDate.now().plusDays(120), 4.0);
-    Ingredient ingredient2 = new Ingredient("Corn Flour", 1000, "grams", LocalDate.now().plusDays(120), 4.0);
+    Ingredient ingredient1 = new Ingredient("Flour", 1000, "grams", LocalDate.now().plusDays(120),
+        4.0);
+    Ingredient ingredient2 = new Ingredient("Corn Flour", 1000, "grams",
+        LocalDate.now().plusDays(120), 4.0);
 
     assertNotEquals(ingredient1, ingredient2);
   }

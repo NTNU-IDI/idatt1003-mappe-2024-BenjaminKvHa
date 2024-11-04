@@ -1,9 +1,10 @@
 package edu.ntnu.idi.idatt.ui;
 
+import edu.ntnu.idi.idatt.model.FoodInventory;
 import edu.ntnu.idi.idatt.model.Ingredient;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -11,12 +12,12 @@ import java.util.Scanner;
  * Handles user interactions and provides a text-based user interface for the application.
  * <p>
  * This class manages the input and output operations with the user, allowing them to
- * create ingredients, list all ingredients, and perform other actions as defined.
+ * interact with the food inventory system.
  * </p>
  */
 public class UserInterface {
 
-  private List<Ingredient> ingredientList;
+  private FoodInventory foodInventory;
 
   /**
    * Initializes the user interface.
@@ -26,7 +27,8 @@ public class UserInterface {
    * </p>
    */
   public void init() {
-    ingredientList = new ArrayList<>();
+    foodInventory = new FoodInventory();
+    populateSampleIngredients();
   }
 
   /**
@@ -41,31 +43,165 @@ public class UserInterface {
     boolean running = true;
 
     while (running) {
-      System.out.println("\n--- Ingredient Manager ---");
-      System.out.println("1. Create new ingredient");
+      System.out.println("\n--- Food Inventory Manager ---");
+      System.out.println("1. Add new ingredient");
       System.out.println("2. List all ingredients");
-      System.out.println("3. Exit");
+      System.out.println("3. Find ingredient by name");
+      System.out.println("4. Remove quantity from ingredient");
+      System.out.println("5. List ingredients expiring before a date");
+      System.out.println("6. Exit");
       System.out.print("Choose an option: ");
 
       String choice = scanner.nextLine().trim();
 
       switch (choice) {
         case "1":
-          Ingredient ingredient = createIngredient();
-          if (ingredient != null) {
-            ingredientList.add(ingredient);
-            System.out.println("Ingredient added to the list.");
-          }
+          addNewIngredient();
           break;
         case "2":
           listAllIngredients();
           break;
         case "3":
+          findIngredientByName();
+          break;
+        case "4":
+          removeQuantityFromIngredient();
+          break;
+        case "5":
+          listIngredientsExpiringBeforeDate();
+          break;
+        case "6":
           running = false;
           System.out.println("Exiting the application. Goodbye!");
           break;
         default:
           System.out.println("Invalid option. Please try again.");
+      }
+    }
+  }
+
+  /**
+   * Populates the food inventory with sample ingredients.
+   */
+  private void populateSampleIngredients() {
+    Ingredient milk = new Ingredient("Milk", 2.0, "liter", LocalDate.now().plusDays(5), 20.0);
+    Ingredient bread = new Ingredient("Bread", 1.0, "loaf", LocalDate.now().plusDays(2), 25.0);
+    Ingredient eggs = new Ingredient("Eggs", 12, "pieces", LocalDate.now().plusDays(10), 3.0);
+    Ingredient cheese = new Ingredient("Cheese", 0.5, "kg", LocalDate.now().plusDays(15), 50.0);
+
+    foodInventory.addIngredient(milk);
+    foodInventory.addIngredient(bread);
+    foodInventory.addIngredient(eggs);
+    foodInventory.addIngredient(cheese);
+  }
+
+  /**
+   * Adds a new ingredient to the food inventory based on user input.
+   */
+  private void addNewIngredient() {
+    Ingredient ingredient = createIngredient();
+    if (ingredient != null) {
+      foodInventory.addIngredient(ingredient);
+      System.out.println("Ingredient added to the inventory.");
+    }
+  }
+
+  /**
+   * Lists all ingredients in the food inventory.
+   */
+  private void listAllIngredients() {
+    List<Ingredient> ingredients = foodInventory.getAllIngredientsSortedByName();
+    if (ingredients.isEmpty()) {
+      System.out.println("No ingredients in the inventory.");
+    } else {
+      System.out.println("\n--- List of Ingredients ---");
+      for (Ingredient ingredient : ingredients) {
+        System.out.println(ingredient);
+      }
+    }
+  }
+
+  /**
+   * Finds an ingredient by name based on user input.
+   */
+  private void findIngredientByName() {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter the name of the ingredient to find: ");
+    String name = scanner.nextLine().trim();
+
+    if (name.isEmpty()) {
+      System.out.println("Name cannot be empty.");
+      return;
+    }
+
+    Ingredient ingredient = foodInventory.findIngredientByName(name);
+    if (ingredient != null) {
+      System.out.println("Ingredient found:");
+      System.out.println(ingredient);
+    } else {
+      System.out.println("Ingredient not found in the inventory.");
+    }
+  }
+
+  /**
+   * Removes a quantity from an ingredient based on user input.
+   */
+  private void removeQuantityFromIngredient() {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter the name of the ingredient: ");
+    String name = scanner.nextLine().trim();
+
+    if (name.isEmpty()) {
+      System.out.println("Name cannot be empty.");
+      return;
+    }
+
+    System.out.print("Enter the quantity to remove: ");
+    String quantityInput = scanner.nextLine().trim();
+    double quantity;
+
+    try {
+      quantity = Double.parseDouble(quantityInput);
+      if (quantity <= 0) {
+        System.out.println("Quantity must be positive.");
+        return;
+      }
+    } catch (NumberFormatException e) {
+      System.out.println("Invalid quantity format.");
+      return;
+    }
+
+    boolean result = foodInventory.removeQuantity(name, quantity);
+    if (result) {
+      System.out.println("Quantity removed successfully.");
+    } else {
+      System.out.println("Ingredient not found in the inventory.");
+    }
+  }
+
+  /**
+   * Lists ingredients that expire before a certain date based on user input.
+   */
+  private void listIngredientsExpiringBeforeDate() {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter a date (YYYY-MM-DD): ");
+    String dateInput = scanner.nextLine().trim();
+
+    LocalDate date;
+    try {
+      date = LocalDate.parse(dateInput);
+    } catch (DateTimeParseException e) {
+      System.out.println("Invalid date format.");
+      return;
+    }
+
+    List<Ingredient> expiringIngredients = foodInventory.getIngredientsExpiringBefore(date);
+    if (expiringIngredients.isEmpty()) {
+      System.out.println("No ingredients expiring before " + date + ".");
+    } else {
+      System.out.println("\n--- Ingredients expiring before " + date + " ---");
+      for (Ingredient ingredient : expiringIngredients) {
+        System.out.println(ingredient);
       }
     }
   }
@@ -164,24 +300,5 @@ public class UserInterface {
       System.out.println("Error creating ingredient: " + e.getMessage());
     }
     return null;
-  }
-
-  /**
-   * Lists all ingredients stored in the ingredient list.
-   * <p>
-   * This method displays all the ingredients that have been added to the list.
-   * If the list is empty, it informs the user accordingly.
-   * </p>
-   */
-  public void listAllIngredients() {
-    if (ingredientList.isEmpty()) {
-      System.out.println("No ingredients have been added yet.");
-    } else {
-      System.out.println("\n--- List of Ingredients ---");
-      for (int i = 0; i < ingredientList.size(); i++) {
-        Ingredient ingredient = ingredientList.get(i);
-        System.out.printf("%d. %s\n", i + 1, ingredient);
-      }
-    }
   }
 }
