@@ -2,7 +2,6 @@ package edu.ntnu.idi.idatt.ui;
 
 import edu.ntnu.idi.idatt.model.FoodInventory;
 import edu.ntnu.idi.idatt.model.Ingredient;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -11,8 +10,8 @@ import java.util.Scanner;
 /**
  * Handles user interactions and provides a text-based user interface for the application.
  * <p>
- * This class manages the input and output operations with the user, allowing them to
- * interact with the food inventory system.
+ * This class manages the input and output operations with the user, allowing them to interact with
+ * the food inventory system.
  * </p>
  */
 public class UserInterface {
@@ -22,8 +21,8 @@ public class UserInterface {
   /**
    * Initializes the user interface.
    * <p>
-   * This method sets up any necessary data structures or variables before the
-   * user interface starts interacting with the user.
+   * This method sets up any necessary data structures or variables before the user interface starts
+   * interacting with the user.
    * </p>
    */
   public void init() {
@@ -34,8 +33,8 @@ public class UserInterface {
   /**
    * Starts the user interface and handles the main menu loop.
    * <p>
-   * This method displays the menu options to the user, processes their input,
-   * and calls the appropriate methods based on the user's choices.
+   * This method displays the menu options to the user, processes their input, and calls the
+   * appropriate methods based on the user's choices.
    * </p>
    */
   public void start() {
@@ -209,9 +208,9 @@ public class UserInterface {
   /**
    * Creates an {@code Ingredient} based on user input.
    * <p>
-   * This method prompts the user for the ingredient's name, quantity, unit,
-   * best-before date, and price per unit. It validates the input and constructs
-   * an {@code Ingredient} object if all inputs are valid.
+   * This method prompts the user for the ingredient's name, quantity, unit, best-before date, and
+   * price per unit. It validates the input and constructs an {@code Ingredient} object if all
+   * inputs are valid.
    * </p>
    *
    * @return the created {@code Ingredient}, or {@code null} if creation failed
