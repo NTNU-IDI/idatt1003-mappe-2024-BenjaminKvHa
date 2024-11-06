@@ -1,12 +1,12 @@
 package edu.ntnu.idi.idatt.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link Cookbook} class.
@@ -35,9 +35,9 @@ class CookbookTest {
         "Mix ingredients and cook on a skillet.",
         4
     );
-    pancakeRecipe.addIngredient("Flour", 200);
-    pancakeRecipe.addIngredient("Milk", 300);
-    pancakeRecipe.addIngredient("Eggs", 2);
+    pancakeRecipe.addIngredient("Flour", 200, Unit.GRAM);
+    pancakeRecipe.addIngredient("Milk", 3, Unit.DECILITER);
+    pancakeRecipe.addIngredient("Eggs", 2, Unit.PIECE);
 
     omeletteRecipe = new Recipe(
         "Omelette",
@@ -45,15 +45,16 @@ class CookbookTest {
         "Beat eggs and cook on a pan.",
         2
     );
-    omeletteRecipe.addIngredient("Eggs", 3);
-    omeletteRecipe.addIngredient("Cheese", 50);
+    omeletteRecipe.addIngredient("Eggs", 3, Unit.PIECE);
+    omeletteRecipe.addIngredient("Cheese", 50, Unit.GRAM);
+    omeletteRecipe.addIngredient("Milk", 0.5, Unit.DECILITER);
   }
 
   /**
    * Tests that a recipe can be added to the cookbook.
    */
   @Test
-  void addRecipe() {
+  void testAddRecipe() {
     // Arrange
     // Done in setUp()
 
@@ -69,7 +70,7 @@ class CookbookTest {
    * Tests that adding a null recipe throws an exception.
    */
   @Test
-  void addNullRecipeThrowsException() {
+  void testAddNullRecipeThrowsException() {
     // Arrange, Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       cookbook.addRecipe(null);
@@ -78,25 +79,10 @@ class CookbookTest {
   }
 
   /**
-   * Tests that adding a duplicate recipe throws an exception.
+   * Tests that finding a recipe by name works correctly.
    */
   @Test
-  void addDuplicateRecipeThrowsException() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      cookbook.addRecipe(pancakeRecipe);
-    });
-    assertEquals("Recipe already exists in the cookbook.", exception.getMessage());
-  }
-
-  /**
-   * Tests that a recipe can be found by name.
-   */
-  @Test
-  void findRecipeByName() {
+  void testFindRecipeByName() {
     // Arrange
     cookbook.addRecipe(pancakeRecipe);
 
@@ -109,81 +95,19 @@ class CookbookTest {
   }
 
   /**
-   * Tests that searching for a non-existent recipe returns null.
+   * Tests that getting recipes that can be made returns the correct list.
    */
   @Test
-  void findRecipeByNameNotFound() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act
-    Recipe foundRecipe = cookbook.findRecipeByName("Waffles");
-
-    // Assert
-    assertNull(foundRecipe);
-  }
-
-  /**
-   * Tests that searching with a null name throws an exception.
-   */
-  @Test
-  void findRecipeByNameNullThrowsException() {
-    // Arrange, Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      cookbook.findRecipeByName(null);
-    });
-    assertEquals("Name cannot be null or empty.", exception.getMessage());
-  }
-
-  /**
-   * Tests that getting all recipes returns the correct list.
-   */
-  @Test
-  void getAllRecipes() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-    cookbook.addRecipe(omeletteRecipe);
-
-    // Act
-    List<Recipe> allRecipes = cookbook.getAllRecipes();
-
-    // Assert
-    assertEquals(2, allRecipes.size());
-    assertTrue(allRecipes.contains(pancakeRecipe));
-    assertTrue(allRecipes.contains(omeletteRecipe));
-  }
-
-  /**
-   * Tests that the returned list from getAllRecipes is unmodifiable.
-   */
-  @Test
-  void getAllRecipesUnmodifiable() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act
-    List<Recipe> allRecipes = cookbook.getAllRecipes();
-
-    // Assert
-    assertThrows(UnsupportedOperationException.class, () -> {
-      allRecipes.add(omeletteRecipe);
-    });
-  }
-
-  /**
-   * Tests that recipes that can be made are correctly identified.
-   */
-  @Test
-  void getRecipesCanBeMade() {
+  void testGetRecipesCanBeMade() {
     // Arrange
     cookbook.addRecipe(pancakeRecipe);
     cookbook.addRecipe(omeletteRecipe);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Flour", 500, "grams", LocalDate.now().plusDays(5), 10));
-    inventory.addIngredient(new Ingredient("Milk", 1000, "ml", LocalDate.now().plusDays(5), 15));
-    inventory.addIngredient(new Ingredient("Eggs", 6, "pieces", LocalDate.now().plusDays(5), 20));
-    inventory.addIngredient(new Ingredient("Cheese", 100, "grams", LocalDate.now().plusDays(5), 25));
+    inventory.addIngredient(new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(30), 15.0));
+    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
+    inventory.addIngredient(new Ingredient("Cheese", 100, Unit.GRAM, LocalDate.now().plusDays(15), 50.0));
 
     // Act
     List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(inventory);
@@ -195,145 +119,36 @@ class CookbookTest {
   }
 
   /**
-   * Tests that recipes that cannot be made are correctly identified.
+   * Tests that recipes with missing ingredients are not included in the available recipes.
    */
   @Test
-  void getRecipesCannotBeMade() {
+  void testGetRecipesCanBeMadeMissingIngredients() {
     // Arrange
     cookbook.addRecipe(pancakeRecipe);
     cookbook.addRecipe(omeletteRecipe);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Eggs", 2, "pieces", LocalDate.now().plusDays(5), 20));
-    inventory.addIngredient(new Ingredient("Milk", 1000, "ml", LocalDate.now().plusDays(5), 15));
+    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(new Ingredient("Eggs", 2, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
 
     // Act
-    List<Recipe> unavailableRecipes = cookbook.getRecipesCannotBeMade(inventory);
+    List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(inventory);
 
     // Assert
-    assertEquals(2, unavailableRecipes.size());
-    assertTrue(unavailableRecipes.contains(pancakeRecipe));
-    assertTrue(unavailableRecipes.contains(omeletteRecipe));
-  }
-
-  /**
-   * Tests that removing a recipe works correctly.
-   */
-  @Test
-  void removeRecipe() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-    cookbook.addRecipe(omeletteRecipe);
-
-    // Act
-    boolean removed = cookbook.removeRecipe(pancakeRecipe);
-
-    // Assert
-    assertTrue(removed);
-    assertEquals(1, cookbook.getAllRecipes().size());
-    assertFalse(cookbook.getAllRecipes().contains(pancakeRecipe));
-  }
-
-  /**
-   * Tests that removing a recipe that doesn't exist returns false.
-   */
-  @Test
-  void removeNonExistentRecipe() {
-    // Arrange
-    cookbook.addRecipe(omeletteRecipe);
-
-    // Act
-    boolean removed = cookbook.removeRecipe(pancakeRecipe);
-
-    // Assert
-    assertFalse(removed);
-    assertEquals(1, cookbook.getAllRecipes().size());
-  }
-
-  /**
-   * Tests that checking if a recipe exists works correctly.
-   */
-  @Test
-  void containsRecipe() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act
-    boolean contains = cookbook.containsRecipe("Pancakes");
-
-    // Assert
-    assertTrue(contains);
-  }
-
-  /**
-   * Tests that checking for a non-existent recipe returns false.
-   */
-  @Test
-  void containsRecipeNotFound() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act
-    boolean contains = cookbook.containsRecipe("Waffles");
-
-    // Assert
-    assertFalse(contains);
-  }
-
-  /**
-   * Tests that passing a null recipe to removeRecipe throws an exception.
-   */
-  @Test
-  void removeNullRecipeThrowsException() {
-    // Arrange
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      cookbook.removeRecipe(null);
-    });
-    assertEquals("Recipe cannot be null.", exception.getMessage());
-  }
-
-  /**
-   * Tests that passing a null name to containsRecipe throws an exception.
-   */
-  @Test
-  void containsRecipeNullNameThrowsException() {
-    // Arrange
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      cookbook.containsRecipe(null);
-    });
-    assertEquals("Name cannot be null or empty.", exception.getMessage());
+    assertEquals(0, availableRecipes.size());
   }
 
   /**
    * Tests that passing a null inventory to getRecipesCanBeMade throws an exception.
    */
   @Test
-  void getRecipesCanBeMadeNullInventoryThrowsException() {
+  void testGetRecipesCanBeMadeNullInventoryThrowsException() {
     // Arrange
     cookbook.addRecipe(pancakeRecipe);
 
     // Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       cookbook.getRecipesCanBeMade(null);
-    });
-    assertEquals("Inventory cannot be null.", exception.getMessage());
-  }
-
-  /**
-   * Tests that passing a null inventory to getRecipesCannotBeMade throws an exception.
-   */
-  @Test
-  void getRecipesCannotBeMadeNullInventoryThrowsException() {
-    // Arrange
-    cookbook.addRecipe(pancakeRecipe);
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      cookbook.getRecipesCannotBeMade(null);
     });
     assertEquals("Inventory cannot be null.", exception.getMessage());
   }

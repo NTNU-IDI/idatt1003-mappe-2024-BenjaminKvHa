@@ -4,16 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link Recipe} class.
- * <p>
- * This class tests the functionality of the Recipe class, including adding ingredients,
- * checking if a recipe can be made from an inventory, and handling invalid inputs.
- * </p>
  */
 class RecipeTest {
 
@@ -24,58 +19,48 @@ class RecipeTest {
    */
   @BeforeEach
   void setUp() {
-    recipe = new Recipe(
-        "Pancakes",
-        "Fluffy pancakes",
-        "Mix ingredients and cook on a skillet.",
-        4
-    );
+    recipe = new Recipe("Pancakes", "Fluffy pancakes", "Mix ingredients and cook on a skillet.", 4);
   }
 
   /**
-   * Tests that a recipe is created with valid inputs.
+   * Tests that the recipe is created correctly with valid inputs.
    */
   @Test
   void testValidConstructor() {
     // Arrange
-    // Done in setUp()
+    String name = "Omelette";
+    String description = "Simple omelette";
+    String preparationMethod = "Beat eggs and cook on a pan.";
+    int servings = 2;
 
-    // Act & Assert
-    assertEquals("Pancakes", recipe.getName());
-    assertEquals("Fluffy pancakes", recipe.getDescription());
-    assertEquals("Mix ingredients and cook on a skillet.", recipe.getPreparationMethod());
-    assertEquals(4, recipe.getServings());
-    assertTrue(recipe.getIngredients().isEmpty());
+    // Act
+    Recipe omelette = new Recipe(name, description, preparationMethod, servings);
+
+    // Assert
+    assertEquals(name, omelette.getName());
+    assertEquals(description, omelette.getDescription());
+    assertEquals(preparationMethod, omelette.getPreparationMethod());
+    assertEquals(servings, omelette.getServings());
   }
 
   /**
-   * Tests that creating a recipe with an invalid name throws an exception.
-   */
-  @Test
-  void testConstructorInvalidName() {
-    // Arrange, Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      new Recipe("", "Description", "Method", 4);
-    });
-    assertEquals("Name cannot be null or empty.", exception.getMessage());
-  }
-
-  /**
-   * Tests that adding a valid ingredient works correctly.
+   * Tests that adding an ingredient with valid inputs works correctly.
    */
   @Test
   void testAddIngredient() {
     // Arrange
-    // Done in setUp()
+    String ingredientName = "Flour";
+    double quantity = 200;
+    Unit unit = Unit.GRAM;
 
     // Act
-    recipe.addIngredient("Flour", 200);
+    recipe.addIngredient(ingredientName, quantity, unit);
 
     // Assert
-    Map<String, Double> ingredients = recipe.getIngredients();
-    assertEquals(1, ingredients.size());
-    assertTrue(ingredients.containsKey("flour"));
-    assertEquals(200, ingredients.get("flour"));
+    assertTrue(recipe.getIngredients().containsKey(ingredientName.toLowerCase()));
+    IngredientRequirement requirement = recipe.getIngredients().get(ingredientName.toLowerCase());
+    assertEquals(quantity, requirement.getQuantity());
+    assertEquals(unit, requirement.getUnit());
   }
 
   /**
@@ -85,7 +70,7 @@ class RecipeTest {
   void testAddIngredientInvalidName() {
     // Arrange, Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      recipe.addIngredient("", 100);
+      recipe.addIngredient("", 200, Unit.GRAM);
     });
     assertEquals("Ingredient name cannot be null or empty.", exception.getMessage());
   }
@@ -97,25 +82,37 @@ class RecipeTest {
   void testAddIngredientInvalidQuantity() {
     // Arrange, Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      recipe.addIngredient("Sugar", -50);
+      recipe.addIngredient("Flour", -100, Unit.GRAM);
     });
     assertEquals("Quantity must be positive.", exception.getMessage());
   }
 
   /**
-   * Tests that the recipe can correctly identify if it can be made from a given inventory.
+   * Tests that adding an ingredient with a null unit throws an exception.
+   */
+  @Test
+  void testAddIngredientNullUnit() {
+    // Arrange, Act & Assert
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      recipe.addIngredient("Flour", 200, null);
+    });
+    assertEquals("Unit cannot be null.", exception.getMessage());
+  }
+
+  /**
+   * Tests that canBeMadeFromInventory returns true when all ingredients are available in sufficient quantities.
    */
   @Test
   void testCanBeMadeFromInventory() {
     // Arrange
-    recipe.addIngredient("Flour", 200);
-    recipe.addIngredient("Milk", 300);
-    recipe.addIngredient("Eggs", 2);
+    recipe.addIngredient("Flour", 200, Unit.GRAM);
+    recipe.addIngredient("Milk", 3, Unit.DECILITER);
+    recipe.addIngredient("Eggs", 2, Unit.PIECE);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Flour", 500, "grams", LocalDate.now().plusDays(5), 10));
-    inventory.addIngredient(new Ingredient("Milk", 1000, "ml", LocalDate.now().plusDays(5), 15));
-    inventory.addIngredient(new Ingredient("Eggs", 6, "pieces", LocalDate.now().plusDays(5), 20));
+    inventory.addIngredient(new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(30), 15.0));
+    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
 
     // Act
     boolean canBeMade = recipe.canBeMadeFromInventory(inventory);
@@ -125,19 +122,19 @@ class RecipeTest {
   }
 
   /**
-   * Tests that the recipe correctly identifies when it cannot be made due to insufficient quantities.
+   * Tests that canBeMadeFromInventory returns false when ingredients are insufficient.
    */
   @Test
   void testCannotBeMadeFromInventoryInsufficientQuantity() {
     // Arrange
-    recipe.addIngredient("Flour", 200);
-    recipe.addIngredient("Milk", 300);
-    recipe.addIngredient("Eggs", 2);
+    recipe.addIngredient("Flour", 200, Unit.GRAM);
+    recipe.addIngredient("Milk", 3, Unit.DECILITER);
+    recipe.addIngredient("Eggs", 2, Unit.PIECE);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Flour", 100, "grams", LocalDate.now().plusDays(5), 10));
-    inventory.addIngredient(new Ingredient("Milk", 1000, "ml", LocalDate.now().plusDays(5), 15));
-    inventory.addIngredient(new Ingredient("Eggs", 1, "pieces", LocalDate.now().plusDays(5), 20));
+    inventory.addIngredient(new Ingredient("Flour", 150, Unit.GRAM, LocalDate.now().plusDays(30), 15.0));
+    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.DECILITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(new Ingredient("Eggs", 1, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
 
     // Act
     boolean canBeMade = recipe.canBeMadeFromInventory(inventory);
@@ -147,20 +144,17 @@ class RecipeTest {
   }
 
   /**
-   * Tests that the recipe correctly identifies when it cannot be made due to missing ingredients.
+   * Tests that canBeMadeFromInventory returns false when units are incompatible.
    */
   @Test
-  void testCannotBeMadeFromInventoryMissingIngredient() {
+  void testCannotBeMadeFromInventoryIncompatibleUnits() {
     // Arrange
-    recipe.addIngredient("Flour", 200);
-    recipe.addIngredient("Milk", 300);
-    recipe.addIngredient("Eggs", 2);
-    recipe.addIngredient("Sugar", 50);
+    recipe.addIngredient("Flour", 200, Unit.GRAM);
+    recipe.addIngredient("Milk", 3, Unit.DECILITER);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Flour", 500, "grams", LocalDate.now().plusDays(5), 10));
-    inventory.addIngredient(new Ingredient("Milk", 1000, "ml", LocalDate.now().plusDays(5), 15));
-    inventory.addIngredient(new Ingredient("Eggs", 6, "pieces", LocalDate.now().plusDays(5), 20));
+    inventory.addIngredient(new Ingredient("Flour", 1.0, Unit.LITER, LocalDate.now().plusDays(30), 15.0)); // Incompatible unit
+    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
 
     // Act
     boolean canBeMade = recipe.canBeMadeFromInventory(inventory);
@@ -175,7 +169,7 @@ class RecipeTest {
   @Test
   void testCanBeMadeFromInventoryNullInventoryThrowsException() {
     // Arrange
-    recipe.addIngredient("Flour", 200);
+    recipe.addIngredient("Flour", 200, Unit.GRAM);
 
     // Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {

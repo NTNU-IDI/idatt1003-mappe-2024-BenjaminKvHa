@@ -7,14 +7,14 @@ import java.util.Objects;
 
 /**
  * Represents a recipe with a name, description, preparation method,
- * a list of ingredients with required quantities, and the number of servings.
+ * a list of ingredients with required quantities and units, and the number of servings.
  */
 public class Recipe {
 
   private String name;
   private String description;
   private String preparationMethod;
-  private Map<String, Double> ingredients;
+  private Map<String, IngredientRequirement> ingredients;
   private int servings;
 
   /**
@@ -41,30 +41,30 @@ public class Recipe {
   }
 
   /**
-   * Adds an ingredient with the required quantity to the recipe.
+   * Adds an ingredient requirement to the recipe.
    *
    * @param ingredientName the name of the ingredient; cannot be null or empty
    * @param quantity       the required quantity; must be positive
+   * @param unit           the unit of measurement; cannot be null
    * @throws IllegalArgumentException if any parameter is invalid
    */
-  public void addIngredient(String ingredientName, double quantity) {
+  public void addIngredient(String ingredientName, double quantity, Unit unit) {
     validateIngredientName(ingredientName);
     validateQuantity(quantity);
+    validateUnit(unit);
 
     String key = ingredientName.toLowerCase();
-    ingredients.put(key, quantity);
+    ingredients.put(key, new IngredientRequirement(quantity, unit));
   }
 
   /**
-   * Returns an unmodifiable map of ingredients and their required quantities.
+   * Returns an unmodifiable map of ingredients and their requirements.
    *
-   * @return a map of ingredient names to quantities
+   * @return a map of ingredient names to their requirements
    */
-  public Map<String, Double> getIngredients() {
+  public Map<String, IngredientRequirement> getIngredients() {
     return Collections.unmodifiableMap(ingredients);
   }
-
-  // Getters and setters with validation
 
   public String getName() {
     return name;
@@ -102,8 +102,6 @@ public class Recipe {
     this.servings = servings;
   }
 
-  // Validation methods
-
   private void validateName(String name) {
     if (name == null || name.trim().isEmpty()) {
       throw new IllegalArgumentException("Name cannot be null or empty.");
@@ -140,6 +138,12 @@ public class Recipe {
     }
   }
 
+  private void validateUnit(Unit unit) {
+    if (unit == null) {
+      throw new IllegalArgumentException("Unit cannot be null.");
+    }
+  }
+
   // equals and hashCode methods based on name
 
   @Override
@@ -158,6 +162,7 @@ public class Recipe {
 
   /**
    * Checks if the required ingredients are available in the provided inventory.
+   * Performs unit conversions where necessary.
    *
    * @param inventory the food inventory to check against; cannot be null
    * @return true if all ingredients are available in sufficient quantities, false otherwise
@@ -168,15 +173,78 @@ public class Recipe {
       throw new IllegalArgumentException("Inventory cannot be null.");
     }
 
-    for (Map.Entry<String, Double> entry : ingredients.entrySet()) {
+    for (Map.Entry<String, IngredientRequirement> entry : ingredients.entrySet()) {
       String ingredientName = entry.getKey();
-      double requiredQuantity = entry.getValue();
+      IngredientRequirement requirement = entry.getValue();
 
       Ingredient ingredient = inventory.findIngredientByName(ingredientName);
-      if (ingredient == null || ingredient.getQuantity() < requiredQuantity) {
+      if (ingredient == null) {
+        return false;
+      }
+
+      if (!requirement.getUnit().equals(ingredient.getUnit()) && !areUnitsCompatible(requirement.getUnit(), ingredient.getUnit())) {
+        return false;
+      }
+
+      double requiredQuantityInBaseUnit = convertToBaseUnit(requirement.getQuantity(), requirement.getUnit());
+      double availableQuantityInBaseUnit = convertToBaseUnit(ingredient.getQuantity(), ingredient.getUnit());
+
+      if (availableQuantityInBaseUnit < requiredQuantityInBaseUnit) {
         return false;
       }
     }
     return true;
+  }
+
+  /**
+   * Converts a quantity to its base unit (grams for mass, liters for volume).
+   *
+   * @param quantity the quantity to convert
+   * @param unit     the unit of the quantity
+   * @return the quantity converted to the base unit
+   */
+  private double convertToBaseUnit(double quantity, Unit unit) {
+    switch (unit) {
+      case GRAM:
+        return quantity;
+      case KILOGRAM:
+        return quantity * 1000;
+      case DECILITER:
+        return quantity * 0.1;
+      case LITER:
+        return quantity;
+      case PIECE:
+        return quantity;
+      default:
+        throw new IllegalArgumentException("Unsupported unit: " + unit);
+    }
+  }
+
+  /**
+   * Checks if two units are compatible (mass with mass, volume with volume, count with count).
+   *
+   * @param unit1 the first unit
+   * @param unit2 the second unit
+   * @return true if units are compatible, false otherwise
+   */
+  private boolean areUnitsCompatible(Unit unit1, Unit unit2) {
+    if (unit1 == unit2) {
+      return true;
+    }
+    return (isMassUnit(unit1) && isMassUnit(unit2)) ||
+        (isVolumeUnit(unit1) && isVolumeUnit(unit2)) ||
+        (isCountUnit(unit1) && isCountUnit(unit2));
+  }
+
+  private boolean isMassUnit(Unit unit) {
+    return unit == Unit.GRAM || unit == Unit.KILOGRAM;
+  }
+
+  private boolean isVolumeUnit(Unit unit) {
+    return unit == Unit.LITER || unit == Unit.DECILITER;
+  }
+
+  private boolean isCountUnit(Unit unit) {
+    return unit == Unit.PIECE;
   }
 }

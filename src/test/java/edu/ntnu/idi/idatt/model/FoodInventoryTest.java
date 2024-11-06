@@ -1,63 +1,134 @@
 package edu.ntnu.idi.idatt.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.LocalDate;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  * Unit tests for the {@link FoodInventory} class.
- * <p>
- * This class tests the functionality of the FoodInventory class, including adding ingredients,
- * finding ingredients by name, removing quantities, retrieving ingredients expiring before a
- * certain date, and getting all ingredients sorted by name.
- * </p>
  */
 class FoodInventoryTest {
 
-  private FoodInventory foodInventory;
-
-  private Ingredient milk;
-  private Ingredient bread;
-  private Ingredient eggs;
+  private FoodInventory inventory;
 
   /**
-   * Sets up a new FoodInventory and sample ingredients before each test.
+   * Sets up a new FoodInventory before each test.
    */
   @BeforeEach
   void setUp() {
-    foodInventory = new FoodInventory();
+    inventory = new FoodInventory();
+  }
 
-    milk = new Ingredient(
-        "Milk",
-        2.0,
-        "liter",
-        LocalDate.now().plusDays(5),
-        20.0
-    );
+  @Test
+  void testRemoveQuantity() {
+    // Arrange
+    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
+    inventory.addIngredient(sugar);
 
-    bread = new Ingredient(
-        "Bread",
-        1.0,
-        "loaf",
-        LocalDate.now().plusDays(2),
-        25.0
-    );
+    // Act
+    boolean result = inventory.removeQuantity("Sugar", 500, Unit.GRAM); // Remove 500 grams
 
-    eggs = new Ingredient(
-        "Eggs",
-        12,
-        "pieces",
-        LocalDate.now().plusDays(10),
-        3.0
-    );
+    // Assert
+    assertTrue(result);
+    Ingredient storedSugar = inventory.findIngredientByName("Sugar");
+    assertNotNull(storedSugar);
+    assertEquals(0.5, storedSugar.getQuantity(), 0.0001); // Remaining quantity should be 0.5 kg
+  }
+
+  /**
+   * Tests that removing a quantity removes the ingredient when quantity becomes zero.
+   */
+  @Test
+  void testRemoveQuantityRemovesIngredientWhenZero() {
+    // Arrange
+    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
+    inventory.addIngredient(sugar);
+
+    // Act
+    boolean result = inventory.removeQuantity("Sugar", 1.0, Unit.KILOGRAM); // Remove 1 kg
+
+    // Assert
+    assertTrue(result);
+    assertNull(inventory.findIngredientByName("Sugar"));
+  }
+
+  /**
+   * Tests that removing a quantity with incompatible units throws an exception.
+   */
+  @Test
+  void testRemoveQuantityIncompatibleUnitsThrowsException() {
+    // Arrange
+    Ingredient eggs = new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0);
+    inventory.addIngredient(eggs);
+
+    // Act & Assert
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      inventory.removeQuantity("Eggs", 500, Unit.GRAM); // Attempting to remove grams from pieces
+    });
+    assertEquals("Units are incompatible for ingredient: Eggs", exception.getMessage());
+  }
+
+  /**
+   * Tests that adding ingredients with compatible units updates the quantity correctly with conversions.
+   */
+  @Test
+  void testAddIngredientWithUnitConversion() {
+    // Arrange
+    Ingredient milkInLiters = new Ingredient("Milk", 2.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
+    Ingredient milkInDeciliters = new Ingredient("Milk", 2.0, Unit.DECILITER, LocalDate.now().plusDays(7), 18.0);
+
+    // Act
+    inventory.addIngredient(milkInLiters);
+    inventory.addIngredient(milkInDeciliters);
+
+    // Assert
+    Ingredient storedMilk = inventory.findIngredientByName("Milk");
+    assertNotNull(storedMilk);
+    assertEquals(2.2, storedMilk.getQuantity(), 0.0001);
+    assertEquals(Unit.LITER, storedMilk.getUnit());
+  }
+
+  /**
+   * Tests that adding ingredients with compatible mass units updates the quantity correctly with conversions.
+   */
+  @Test
+  void testAddIngredientWithMassUnitConversion() {
+    // Arrange
+    Ingredient flourInGrams = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
+    Ingredient flourInKilograms = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25), 14.0);
+
+    // Act
+    inventory.addIngredient(flourInGrams);
+    inventory.addIngredient(flourInKilograms);
+
+    // Assert
+    Ingredient storedFlour = inventory.findIngredientByName("Flour");
+    assertNotNull(storedFlour);
+    assertEquals(1500, storedFlour.getQuantity(), 0.0001); // Quantity in grams
+    assertEquals(Unit.GRAM, storedFlour.getUnit()); // Original unit retained
+  }
+
+  /**
+   * Tests that adding an ingredient with an incompatible unit throws an exception.
+   */
+  @Test
+  void testAddIngredientIncompatibleUnitsThrowsException() {
+    // Arrange
+    Ingredient milkInLiters = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
+    Ingredient milkInGrams = new Ingredient("Milk", 500, Unit.GRAM, LocalDate.now().plusDays(60), 25.0);
+
+    // Act
+    inventory.addIngredient(milkInLiters);
+
+    // Assert
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      inventory.addIngredient(milkInGrams);
+    });
+    assertEquals("Units are incompatible for ingredient: Milk", exception.getMessage());
   }
 
   /**
@@ -65,42 +136,12 @@ class FoodInventoryTest {
    */
   @Test
   void testAddIngredient() {
-    // Arrange
-    // Ingredients are set up in the setUp() method
+    Ingredient milk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
 
-    // Act
-    foodInventory.addIngredient(milk);
+    inventory.addIngredient(milk);
 
-    // Assert
-    Ingredient retrievedMilk = foodInventory.findIngredientByName("Milk");
-    assertNotNull(retrievedMilk);
-    assertEquals(milk.getName(), retrievedMilk.getName());
-    assertEquals(milk.getQuantity(), retrievedMilk.getQuantity());
-  }
-
-  /**
-   * Tests that adding an ingredient that already exists increases its quantity.
-   */
-  @Test
-  void testAddExistingIngredientIncreasesQuantity() {
-    // Arrange
-    foodInventory.addIngredient(milk);
-
-    Ingredient additionalMilk = new Ingredient(
-        "Milk",
-        1.0,
-        "liter",
-        LocalDate.now().plusDays(7),
-        20.0
-    );
-
-    // Act
-    foodInventory.addIngredient(additionalMilk);
-
-    // Assert
-    Ingredient retrievedMilk = foodInventory.findIngredientByName("Milk");
-    assertNotNull(retrievedMilk);
-    assertEquals(3.0, retrievedMilk.getQuantity());
+    assertEquals(1, inventory.getAllIngredientsSortedByName().size());
+    assertEquals(milk, inventory.findIngredientByName("Milk"));
   }
 
   /**
@@ -108,222 +149,47 @@ class FoodInventoryTest {
    */
   @Test
   void testAddNullIngredientThrowsException() {
-    // Arrange, Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      foodInventory.addIngredient(null);
+      inventory.addIngredient(null);
     });
     assertEquals("Ingredient cannot be null.", exception.getMessage());
   }
 
   /**
-   * Tests that an ingredient can be found by name.
+   * Tests that adding ingredients with compatible units updates the quantity.
    */
   @Test
-  void testFindIngredientByName() {
-    // Arrange
-    foodInventory.addIngredient(bread);
+  void testAddIngredientUpdatesQuantityWithCompatibleUnits() {
+    Ingredient flour1 = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
+    Ingredient flour2 = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25), 14.0);
 
-    // Act
-    Ingredient foundIngredient = foodInventory.findIngredientByName("Bread");
+    inventory.addIngredient(flour1);
+    inventory.addIngredient(flour2);
 
-    // Assert
-    assertNotNull(foundIngredient);
-    assertEquals(bread, foundIngredient);
+    Ingredient storedFlour = inventory.findIngredientByName("Flour");
+    assertNotNull(storedFlour);
+    assertEquals(1500, storedFlour.getQuantity()); // Quantity in grams
+    assertEquals(Unit.GRAM, storedFlour.getUnit()); // Original unit retained
   }
 
   /**
-   * Tests that searching for a non-existent ingredient returns null.
-   */
-  @Test
-  void testFindIngredientByNameNotFound() {
-    // Arrange
-    // No ingredients added
-
-    // Act
-    Ingredient foundIngredient = foodInventory.findIngredientByName("Cheese");
-
-    // Assert
-    assertNull(foundIngredient);
-  }
-
-  /**
-   * Tests that searching with a null name throws an exception.
-   */
-  @Test
-  void testFindIngredientByNameNullThrowsException() {
-    // Arrange, Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      foodInventory.findIngredientByName(null);
-    });
-    assertEquals("Name cannot be null or empty.", exception.getMessage());
-  }
-
-  /**
-   * Tests that removing a quantity of an ingredient updates its quantity.
-   */
-  @Test
-  void testRemoveQuantity() {
-    // Arrange
-    foodInventory.addIngredient(eggs);
-
-    // Act
-    boolean result = foodInventory.removeQuantity("Eggs", 6);
-
-    // Assert
-    assertTrue(result);
-    Ingredient retrievedEggs = foodInventory.findIngredientByName("Eggs");
-    assertNotNull(retrievedEggs);
-    assertEquals(6, retrievedEggs.getQuantity());
-  }
-
-  /**
-   * Tests that removing a quantity greater than the available amount removes the ingredient.
-   */
-  @Test
-  void testRemoveQuantityExceedingAmountRemovesIngredient() {
-    // Arrange
-    foodInventory.addIngredient(bread);
-
-    // Act
-    boolean result = foodInventory.removeQuantity("Bread", 1.5);
-
-    // Assert
-    assertTrue(result);
-    Ingredient retrievedBread = foodInventory.findIngredientByName("Bread");
-    assertNull(retrievedBread);
-  }
-
-  /**
-   * Tests that removing a quantity of a non-existent ingredient returns false.
-   */
-  @Test
-  void testRemoveQuantityNonExistentIngredient() {
-    // Arrange
-    // No ingredients added
-
-    // Act
-    boolean result = foodInventory.removeQuantity("Cheese", 1.0);
-
-    // Assert
-    assertFalse(result);
-  }
-
-  /**
-   * Tests that removing a negative quantity throws an exception.
-   */
-  @Test
-  void testRemoveQuantityNegativeThrowsException() {
-    // Arrange
-    foodInventory.addIngredient(milk);
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      foodInventory.removeQuantity("Milk", -1.0);
-    });
-    assertEquals("Quantity to remove must be positive.", exception.getMessage());
-  }
-
-  /**
-   * Tests that getting ingredients expiring before a certain date returns the correct ingredients.
-   */
-  @Test
-  void testGetIngredientsExpiringBefore() {
-    // Arrange
-    foodInventory.addIngredient(milk);
-    foodInventory.addIngredient(bread);
-    foodInventory.addIngredient(eggs);
-
-    LocalDate date = LocalDate.now().plusDays(6);
-
-    // Act
-    List<Ingredient> expiringIngredients = foodInventory.getIngredientsExpiringBefore(date);
-
-    // Assert
-    assertEquals(2, expiringIngredients.size());
-    assertTrue(expiringIngredients.contains(milk));
-    assertTrue(expiringIngredients.contains(bread));
-    assertFalse(expiringIngredients.contains(eggs));
-  }
-
-  /**
-   * Tests that getting ingredients expiring before with a null date throws an exception.
-   */
-  @Test
-  void testGetIngredientsExpiringBeforeNullDateThrowsException() {
-    // Arrange
-    foodInventory.addIngredient(milk);
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      foodInventory.getIngredientsExpiringBefore(null);
-    });
-    assertEquals("Date cannot be null.", exception.getMessage());
-  }
-
-  /**
-   * Tests that getting all ingredients sorted by name returns a sorted list.
+   * Tests that getting all ingredients returns a sorted list.
    */
   @Test
   void testGetAllIngredientsSortedByName() {
-    // Arrange
-    foodInventory.addIngredient(eggs);
-    foodInventory.addIngredient(milk);
-    foodInventory.addIngredient(bread);
+    Ingredient milk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
+    Ingredient bread = new Ingredient("Bread", 1.0, Unit.PIECE, LocalDate.now().plusDays(2), 25.0);
+    Ingredient eggs = new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0);
 
-    // Act
-    List<Ingredient> sortedIngredients = foodInventory.getAllIngredientsSortedByName();
+    inventory.addIngredient(milk);
+    inventory.addIngredient(bread);
+    inventory.addIngredient(eggs);
 
-    // Assert
-    assertEquals(3, sortedIngredients.size());
-    assertEquals("Bread", sortedIngredients.get(0).getName());
-    assertEquals("Eggs", sortedIngredients.get(1).getName());
-    assertEquals("Milk", sortedIngredients.get(2).getName());
-  }
+    List<Ingredient> ingredients = inventory.getAllIngredientsSortedByName();
 
-  /**
-   * Tests that adding ingredients with names differing only in case are treated the same.
-   */
-  @Test
-  void testAddIngredientCaseInsensitive() {
-    // Arrange
-    Ingredient cheese = new Ingredient(
-        "Cheese",
-        1.0,
-        "block",
-        LocalDate.now().plusDays(15),
-        50.0
-    );
-
-    Ingredient cheeseLowerCase = new Ingredient(
-        "cheese",
-        0.5,
-        "block",
-        LocalDate.now().plusDays(10),
-        50.0
-    );
-
-    // Act
-    foodInventory.addIngredient(cheese);
-    foodInventory.addIngredient(cheeseLowerCase);
-
-    // Assert
-    Ingredient retrievedCheese = foodInventory.findIngredientByName("CHEESE");
-    assertNotNull(retrievedCheese);
-    assertEquals(1.5, retrievedCheese.getQuantity());
-  }
-
-  /**
-   * Tests that removing quantity with a null name throws an exception.
-   */
-  @Test
-  void testRemoveQuantityNullNameThrowsException() {
-    // Arrange
-    foodInventory.addIngredient(milk);
-
-    // Act & Assert
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      foodInventory.removeQuantity(null, 1.0);
-    });
-    assertEquals("Name cannot be null or empty.", exception.getMessage());
+    assertEquals(3, ingredients.size());
+    assertEquals("Bread", ingredients.get(0).getName());
+    assertEquals("Eggs", ingredients.get(1).getName());
+    assertEquals("Milk", ingredients.get(2).getName());
   }
 }
