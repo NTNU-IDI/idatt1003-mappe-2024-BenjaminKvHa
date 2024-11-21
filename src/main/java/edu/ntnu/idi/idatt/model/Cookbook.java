@@ -2,25 +2,26 @@ package edu.ntnu.idi.idatt.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a cookbook containing a collection of recipes.
  * <p>
- * This class allows adding recipes to the cookbook, finding recipes by name,
- * retrieving all recipes, and getting recipes that can be made with a given
- * food inventory.
+ * This class allows adding recipes to the cookbook, finding recipes by name, retrieving all
+ * recipes, and getting recipes that can be made with a given food inventory.
  * </p>
  */
 public class Cookbook {
 
-  private List<Recipe> recipes;
+  private final Map<String, Recipe> recipes;
 
   /**
    * Constructs an empty Cookbook.
    */
   public Cookbook() {
-    this.recipes = new ArrayList<>();
+    this.recipes = new HashMap<>();
   }
 
   /**
@@ -33,10 +34,11 @@ public class Cookbook {
     if (recipe == null) {
       throw new IllegalArgumentException("Recipe cannot be null.");
     }
-    if (recipes.contains(recipe)) {
+    String key = recipe.getName().toLowerCase();
+    if (recipes.containsKey(key)) {
       throw new IllegalArgumentException("Recipe already exists in the cookbook.");
     }
-    recipes.add(recipe);
+    recipes.put(key, recipe);
   }
 
   /**
@@ -48,12 +50,7 @@ public class Cookbook {
    */
   public Recipe findRecipeByName(String name) {
     validateName(name);
-    for (Recipe recipe : recipes) {
-      if (recipe.getName().equalsIgnoreCase(name)) {
-        return recipe;
-      }
-    }
-    return null;
+    return recipes.get(name.toLowerCase());
   }
 
   /**
@@ -62,7 +59,7 @@ public class Cookbook {
    * @return a list of recipes
    */
   public List<Recipe> getAllRecipes() {
-    return Collections.unmodifiableList(recipes);
+    return Collections.unmodifiableList(new ArrayList<>(recipes.values()));
   }
 
   /**
@@ -78,7 +75,7 @@ public class Cookbook {
     }
 
     List<Recipe> availableRecipes = new ArrayList<>();
-    for (Recipe recipe : recipes) {
+    for (Recipe recipe : recipes.values()) {
       if (recipe.canBeMadeFromInventory(inventory)) {
         availableRecipes.add(recipe);
       }
@@ -94,22 +91,20 @@ public class Cookbook {
    */
   private void validateName(String name) {
     if (name == null || name.trim().isEmpty()) {
-      throw new IllegalArgumentException("Name cannot be null or empty.");
+      throw new IllegalArgumentException("Recipe name cannot be null or empty.");
     }
   }
 
   /**
    * Removes a recipe from the cookbook.
    *
-   * @param recipe the recipe to remove; cannot be null
+   * @param name the name of the recipe to remove; cannot be null or empty
    * @return true if the recipe was removed, false if it was not found
-   * @throws IllegalArgumentException if the recipe is null
+   * @throws IllegalArgumentException if the name is null or empty
    */
-  public boolean removeRecipe(Recipe recipe) {
-    if (recipe == null) {
-      throw new IllegalArgumentException("Recipe cannot be null.");
-    }
-    return recipes.remove(recipe);
+  public boolean removeRecipe(String name) {
+    validateName(name);
+    return recipes.remove(name.toLowerCase()) != null;
   }
 
   /**
@@ -120,7 +115,8 @@ public class Cookbook {
    * @throws IllegalArgumentException if the name is null or empty
    */
   public boolean containsRecipe(String name) {
-    return findRecipeByName(name) != null;
+    validateName(name);
+    return recipes.containsKey(name.toLowerCase());
   }
 
   /**
@@ -136,7 +132,7 @@ public class Cookbook {
     }
 
     List<Recipe> unavailableRecipes = new ArrayList<>();
-    for (Recipe recipe : recipes) {
+    for (Recipe recipe : recipes.values()) {
       if (!recipe.canBeMadeFromInventory(inventory)) {
         unavailableRecipes.add(recipe);
       }

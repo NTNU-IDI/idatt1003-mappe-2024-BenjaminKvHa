@@ -1,7 +1,11 @@
 package edu.ntnu.idi.idatt.ui;
 
-import edu.ntnu.idi.idatt.model.*;
-
+import edu.ntnu.idi.idatt.model.Ingredient;
+import edu.ntnu.idi.idatt.model.IngredientRequirement;
+import edu.ntnu.idi.idatt.model.Recipe;
+import edu.ntnu.idi.idatt.model.Unit;
+import edu.ntnu.idi.idatt.service.InventoryService;
+import edu.ntnu.idi.idatt.service.RecipeService;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -11,91 +15,91 @@ import java.util.Scanner;
 /**
  * Handles user interactions and provides a text-based user interface for the application.
  * <p>
- * This class manages the input and output operations with the user, allowing them to
- * interact with the food inventory and cookbook system.
+ * This class manages the input and output operations with the user, allowing them to interact with
+ * the food inventory and cookbook system.
  * </p>
  */
 public class UserInterface {
 
-  private FoodInventory foodInventory;
-  private Cookbook cookbook;
+  private InventoryService inventoryService;
+  private RecipeService recipeService;
+  private Scanner scanner;
+
+  // Menu option constants
+  private static final String OPTION_ADD_INGREDIENT = "1";
+  private static final String OPTION_LIST_INGREDIENTS = "2";
+  private static final String OPTION_FIND_INGREDIENT = "3";
+  private static final String OPTION_REMOVE_INGREDIENT_QUANTITY = "4";
+  private static final String OPTION_LIST_INGREDIENTS_EXPIRING = "5";
+  private static final String OPTION_ADD_RECIPE = "6";
+  private static final String OPTION_LIST_RECIPES = "7";
+  private static final String OPTION_FIND_RECIPE = "8";
+  private static final String OPTION_CHECK_RECIPE_CAN_BE_MADE = "9";
+  private static final String OPTION_GET_RECIPES_CAN_BE_MADE = "10";
+  private static final String OPTION_EXIT = "11";
 
   /**
    * Initializes the user interface.
    * <p>
-   * This method sets up any necessary data structures or variables before the
-   * user interface starts interacting with the user.
+   * This method sets up any necessary data structures or variables before the user interface starts
+   * interacting with the user.
    * </p>
    */
   public void init() {
-    foodInventory = new FoodInventory();
-    cookbook = new Cookbook();
-    populateSampleIngredients();
-    populateSampleRecipes();
+    inventoryService = new InventoryService();
+    recipeService = new RecipeService();
+    scanner = new Scanner(System.in);
+    inventoryService.populateSampleIngredients();
+    recipeService.populateSampleRecipes();
   }
 
   /**
    * Starts the user interface and handles the main menu loop.
    * <p>
-   * This method displays the menu options to the user, processes their input,
-   * and calls the appropriate methods based on the user's choices.
+   * This method displays the menu options to the user, processes their input, and calls the
+   * appropriate methods based on the user's choices.
    * </p>
    */
   public void start() {
-    Scanner scanner = new Scanner(System.in);
     boolean running = true;
 
     while (running) {
-      System.out.println("\n--- Food Inventory and Cookbook Manager ---");
-      System.out.println("1. Add new ingredient");
-      System.out.println("2. List all ingredients");
-      System.out.println("3. Find ingredient by name");
-      System.out.println("4. Remove quantity from ingredient");
-      System.out.println("5. List ingredients expiring before a date");
-      System.out.println("6. Add new recipe");
-      System.out.println("7. List all recipes");
-      System.out.println("8. Find recipe by name");
-      System.out.println("9. Check if a recipe can be made");
-      System.out.println("10. Get recipes that can be made with current inventory");
-      System.out.println("11. Exit");
-      System.out.print("Choose an option: ");
-
+      displayMainMenu();
       String choice = scanner.nextLine().trim();
 
       switch (choice) {
-        case "1":
+        case OPTION_ADD_INGREDIENT:
           addNewIngredient();
           break;
-        case "2":
+        case OPTION_LIST_INGREDIENTS:
           listAllIngredients();
           break;
-        case "3":
+        case OPTION_FIND_INGREDIENT:
           findIngredientByName();
           break;
-        case "4":
+        case OPTION_REMOVE_INGREDIENT_QUANTITY:
           removeQuantityFromIngredient();
           break;
-        case "5":
+        case OPTION_LIST_INGREDIENTS_EXPIRING:
           listIngredientsExpiringBeforeDate();
           break;
-        case "6":
+        case OPTION_ADD_RECIPE:
           addNewRecipe();
           break;
-        case "7":
+        case OPTION_LIST_RECIPES:
           listAllRecipes();
           break;
-        case "8":
+        case OPTION_FIND_RECIPE:
           findRecipeByName();
           break;
-        case "9":
+        case OPTION_CHECK_RECIPE_CAN_BE_MADE:
           checkIfRecipeCanBeMade();
           break;
-        case "10":
+        case OPTION_GET_RECIPES_CAN_BE_MADE:
           getRecipesCanBeMade();
           break;
-        case "11":
-          running = false;
-          System.out.println("Exiting the application. Goodbye!");
+        case OPTION_EXIT:
+          running = confirmExit();
           break;
         default:
           System.out.println("Invalid option. Please try again.");
@@ -104,56 +108,40 @@ public class UserInterface {
   }
 
   /**
-   * Populates the food inventory with sample ingredients.
+   * Displays the main menu options.
    */
-  private void populateSampleIngredients() {
-    Ingredient milk = new Ingredient("Milk", 2.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
-    Ingredient bread = new Ingredient("Bread", 1.0, Unit.PIECE, LocalDate.now().plusDays(2), 25.0);
-    Ingredient eggs = new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0);
-    Ingredient cheese = new Ingredient("Cheese", 0.5, Unit.KILOGRAM, LocalDate.now().plusDays(15), 50.0);
-    Ingredient flour = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(30), 15.0);
-    Ingredient sugar = new Ingredient("Sugar", 0.5, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
-
-    foodInventory.addIngredient(milk);
-    foodInventory.addIngredient(bread);
-    foodInventory.addIngredient(eggs);
-    foodInventory.addIngredient(cheese);
-    foodInventory.addIngredient(flour);
-    foodInventory.addIngredient(sugar);
+  private void displayMainMenu() {
+    System.out.println("\n--- Food Inventory and Cookbook Manager ---");
+    System.out.println(OPTION_ADD_INGREDIENT + ". Add new ingredient");
+    System.out.println(OPTION_LIST_INGREDIENTS + ". List all ingredients");
+    System.out.println(OPTION_FIND_INGREDIENT + ". Find ingredient by name");
+    System.out.println(OPTION_REMOVE_INGREDIENT_QUANTITY + ". Remove quantity from ingredient");
+    System.out.println(
+        OPTION_LIST_INGREDIENTS_EXPIRING + ". List ingredients expiring before a date");
+    System.out.println(OPTION_ADD_RECIPE + ". Add new recipe");
+    System.out.println(OPTION_LIST_RECIPES + ". List all recipes");
+    System.out.println(OPTION_FIND_RECIPE + ". Find recipe by name");
+    System.out.println(OPTION_CHECK_RECIPE_CAN_BE_MADE + ". Check if a recipe can be made");
+    System.out.println(
+        OPTION_GET_RECIPES_CAN_BE_MADE + ". Get recipes that can be made with current inventory");
+    System.out.println(OPTION_EXIT + ". Exit");
+    System.out.print("Choose an option: ");
   }
 
   /**
-   * Populates the cookbook with sample recipes.
+   * Confirms exit with the user.
+   *
+   * @return false if the user confirms exit, true otherwise
    */
-  private void populateSampleRecipes() {
-    // Pancake recipe
-    Recipe pancakeRecipe = new Recipe(
-        "Pancakes",
-        "Fluffy pancakes",
-        "Mix ingredients and cook on a skillet.",
-        4
-    );
-    pancakeRecipe.addIngredient("Flour", 200, Unit.GRAM);
-    pancakeRecipe.addIngredient("Milk", 3, Unit.DECILITER);
-    pancakeRecipe.addIngredient("Eggs", 2, Unit.PIECE);
-    pancakeRecipe.addIngredient("Sugar", 50, Unit.GRAM);
-
-    // Omelette recipe
-    Recipe omeletteRecipe = new Recipe(
-        "Omelette",
-        "Simple omelette",
-        "Beat eggs and cook on a pan.",
-        2
-    );
-    omeletteRecipe.addIngredient("Eggs", 3, Unit.PIECE);
-    omeletteRecipe.addIngredient("Cheese", 50, Unit.GRAM);
-    omeletteRecipe.addIngredient("Milk", 0.5, Unit.DECILITER);
-
-    try {
-      cookbook.addRecipe(pancakeRecipe);
-      cookbook.addRecipe(omeletteRecipe);
-    } catch (IllegalArgumentException e) {
-      System.out.println("Error adding sample recipes: " + e.getMessage());
+  private boolean confirmExit() {
+    System.out.print("Are you sure you want to exit? (Y/N): ");
+    String response = scanner.nextLine().trim();
+    if (response.equalsIgnoreCase("Y")) {
+      System.out.println("Exiting the application. Goodbye!");
+      return false;
+    } else {
+      System.out.println("Returning to the main menu.");
+      return true;
     }
   }
 
@@ -164,7 +152,7 @@ public class UserInterface {
     Ingredient ingredient = createIngredient();
     if (ingredient != null) {
       try {
-        foodInventory.addIngredient(ingredient);
+        inventoryService.addIngredient(ingredient);
         System.out.println("Ingredient added to the inventory.");
       } catch (IllegalArgumentException e) {
         System.out.println("Error adding ingredient: " + e.getMessage());
@@ -176,7 +164,7 @@ public class UserInterface {
    * Lists all ingredients in the food inventory.
    */
   private void listAllIngredients() {
-    List<Ingredient> ingredients = foodInventory.getAllIngredientsSortedByName();
+    List<Ingredient> ingredients = inventoryService.getAllIngredientsSortedByName();
     if (ingredients.isEmpty()) {
       System.out.println("No ingredients in the inventory.");
     } else {
@@ -191,16 +179,8 @@ public class UserInterface {
    * Finds an ingredient by name based on user input.
    */
   private void findIngredientByName() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter the name of the ingredient to find: ");
-    String name = scanner.nextLine().trim();
-
-    if (name.isEmpty()) {
-      System.out.println("Name cannot be empty.");
-      return;
-    }
-
-    Ingredient ingredient = foodInventory.findIngredientByName(name);
+    String name = readNonEmptyString("Enter the name of the ingredient to find: ");
+    Ingredient ingredient = inventoryService.findIngredientByName(name);
     if (ingredient != null) {
       System.out.println("Ingredient found:");
       System.out.println(ingredient);
@@ -213,68 +193,13 @@ public class UserInterface {
    * Removes a quantity from an ingredient based on user input.
    */
   private void removeQuantityFromIngredient() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter the name of the ingredient: ");
-    String name = scanner.nextLine().trim();
-
-    if (name.isEmpty()) {
-      System.out.println("Name cannot be empty.");
-      return;
-    }
-
-    // Read and validate unit
-    Unit unit;
-    while (true) {
-      System.out.println("Select the unit of the quantity to remove:");
-      System.out.println("1. Liter (L)");
-      System.out.println("2. Deciliter (dl)");
-      System.out.println("3. Kilogram (kg)");
-      System.out.println("4. Gram (g)");
-      System.out.println("5. Piece (pcs)");
-      System.out.print("Enter your choice (1-5): ");
-      String unitChoice = scanner.nextLine().trim();
-      switch (unitChoice) {
-        case "1":
-          unit = Unit.LITER;
-          break;
-        case "2":
-          unit = Unit.DECILITER;
-          break;
-        case "3":
-          unit = Unit.KILOGRAM;
-          break;
-        case "4":
-          unit = Unit.GRAM;
-          break;
-        case "5":
-          unit = Unit.PIECE;
-          break;
-        default:
-          System.out.println("Invalid choice. Please select a valid unit.");
-          continue;
-      }
-      break;
-    }
-
-    // Read and validate quantity
-    double quantity;
-    while (true) {
-      System.out.print("Enter the quantity to remove (" + unit.getAbbreviation() + "): ");
-      String quantityInput = scanner.nextLine().trim();
-      try {
-        quantity = Double.parseDouble(quantityInput);
-        if (quantity > 0) {
-          break;
-        } else {
-          System.out.println("Quantity must be a positive number.");
-        }
-      } catch (NumberFormatException e) {
-        System.out.println("Invalid number format. Please enter a valid number.");
-      }
-    }
+    String name = readNonEmptyString("Enter the name of the ingredient: ");
+    Unit unit = selectUnit();
+    double quantity = readPositiveDouble(
+        "Enter the quantity to remove (" + unit.getAbbreviation() + "): ");
 
     try {
-      boolean result = foodInventory.removeQuantity(name, quantity, unit);
+      boolean result = inventoryService.removeQuantity(name, quantity, unit);
       if (result) {
         System.out.println("Quantity removed successfully.");
       } else {
@@ -285,24 +210,13 @@ public class UserInterface {
     }
   }
 
-
   /**
    * Lists ingredients that expire before a certain date based on user input.
    */
   private void listIngredientsExpiringBeforeDate() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter a date (YYYY-MM-DD): ");
-    String dateInput = scanner.nextLine().trim();
+    LocalDate date = readDate("Enter a date (YYYY-MM-DD): ");
 
-    LocalDate date;
-    try {
-      date = LocalDate.parse(dateInput);
-    } catch (DateTimeParseException e) {
-      System.out.println("Invalid date format.");
-      return;
-    }
-
-    List<Ingredient> expiringIngredients = foodInventory.getIngredientsExpiringBefore(date);
+    List<Ingredient> expiringIngredients = inventoryService.getIngredientsExpiringBefore(date);
     if (expiringIngredients.isEmpty()) {
       System.out.println("No ingredients expiring before " + date + ".");
     } else {
@@ -317,42 +231,10 @@ public class UserInterface {
    * Adds a new recipe to the cookbook based on user input.
    */
   private void addNewRecipe() {
-    Scanner scanner = new Scanner(System.in);
-
-    System.out.print("Enter recipe name: ");
-    String name = scanner.nextLine().trim();
-    if (name.isEmpty()) {
-      System.out.println("Name cannot be empty.");
-      return;
-    }
-
-    System.out.print("Enter a short description: ");
-    String description = scanner.nextLine().trim();
-    if (description.isEmpty()) {
-      System.out.println("Description cannot be empty.");
-      return;
-    }
-
-    System.out.print("Enter the preparation method: ");
-    String preparationMethod = scanner.nextLine().trim();
-    if (preparationMethod.isEmpty()) {
-      System.out.println("Preparation method cannot be empty.");
-      return;
-    }
-
-    System.out.print("Enter the number of servings: ");
-    String servingsInput = scanner.nextLine().trim();
-    int servings;
-    try {
-      servings = Integer.parseInt(servingsInput);
-      if (servings <= 0) {
-        System.out.println("Servings must be positive.");
-        return;
-      }
-    } catch (NumberFormatException e) {
-      System.out.println("Invalid number format.");
-      return;
-    }
+    String name = readNonEmptyString("Enter recipe name: ");
+    String description = readNonEmptyString("Enter a short description: ");
+    String preparationMethod = readNonEmptyString("Enter the preparation method: ");
+    int servings = readPositiveInt("Enter the number of servings: ");
 
     Recipe recipe;
     try {
@@ -366,8 +248,7 @@ public class UserInterface {
     System.out.println("Add ingredients to the recipe.");
     boolean addingIngredients = true;
     while (addingIngredients) {
-      System.out.print("Enter ingredient name (or 'done' to finish): ");
-      String ingredientName = scanner.nextLine().trim();
+      String ingredientName = readString("Enter ingredient name (or 'done' to finish): ");
       if (ingredientName.equalsIgnoreCase("done")) {
         addingIngredients = false;
         continue;
@@ -377,62 +258,19 @@ public class UserInterface {
         continue;
       }
 
-      System.out.print("Enter quantity required: ");
-      String quantityInput = scanner.nextLine().trim();
-      double quantity;
-      try {
-        quantity = Double.parseDouble(quantityInput);
-        if (quantity <= 0) {
-          System.out.println("Quantity must be positive.");
-          continue;
-        }
-      } catch (NumberFormatException e) {
-        System.out.println("Invalid number format.");
-        continue;
-      }
-
-      Unit unit;
-      while (true) {
-        System.out.println("Select unit of measurement:");
-        System.out.println("1. Liter (L)");
-        System.out.println("2. Deciliter (dl)");
-        System.out.println("3. Kilogram (kg)");
-        System.out.println("4. Gram (g)");
-        System.out.println("5. Piece (pcs)");
-        System.out.print("Enter your choice (1-5): ");
-        String unitChoice = scanner.nextLine().trim();
-        switch (unitChoice) {
-          case "1":
-            unit = Unit.LITER;
-            break;
-          case "2":
-            unit = Unit.DECILITER;
-            break;
-          case "3":
-            unit = Unit.KILOGRAM;
-            break;
-          case "4":
-            unit = Unit.GRAM;
-            break;
-          case "5":
-            unit = Unit.PIECE;
-            break;
-          default:
-            System.out.println("Invalid choice. Please select a valid unit.");
-            continue;
-        }
-        break;
-      }
+      double quantity = readPositiveDouble("Enter quantity required: ");
+      Unit unit = selectUnit();
 
       try {
         recipe.addIngredient(ingredientName, quantity, unit);
+        System.out.println("Ingredient added to the recipe.");
       } catch (IllegalArgumentException e) {
         System.out.println("Error adding ingredient: " + e.getMessage());
       }
     }
 
     try {
-      cookbook.addRecipe(recipe);
+      recipeService.addRecipe(recipe);
       System.out.println("Recipe added to the cookbook.");
     } catch (IllegalArgumentException e) {
       System.out.println("Error adding recipe: " + e.getMessage());
@@ -443,7 +281,7 @@ public class UserInterface {
    * Lists all recipes in the cookbook.
    */
   private void listAllRecipes() {
-    List<Recipe> recipes = cookbook.getAllRecipes();
+    List<Recipe> recipes = recipeService.getAllRecipes();
     if (recipes.isEmpty()) {
       System.out.println("No recipes in the cookbook.");
     } else {
@@ -458,27 +296,10 @@ public class UserInterface {
    * Finds a recipe by name based on user input.
    */
   private void findRecipeByName() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter the name of the recipe to find: ");
-    String name = scanner.nextLine().trim();
-
-    if (name.isEmpty()) {
-      System.out.println("Name cannot be empty.");
-      return;
-    }
-
-    Recipe recipe = cookbook.findRecipeByName(name);
+    String name = readNonEmptyString("Enter the name of the recipe to find: ");
+    Recipe recipe = recipeService.findRecipeByName(name);
     if (recipe != null) {
-      System.out.println("\nRecipe found:");
-      System.out.println("Name: " + recipe.getName());
-      System.out.println("Description: " + recipe.getDescription());
-      System.out.println("Preparation Method: " + recipe.getPreparationMethod());
-      System.out.println("Servings: " + recipe.getServings());
-      System.out.println("Ingredients:");
-      for (Map.Entry<String, IngredientRequirement> entry : recipe.getIngredients().entrySet()) {
-        IngredientRequirement req = entry.getValue();
-        System.out.println("- " + entry.getKey() + ": " + req.getQuantity() + " " + req.getUnit().getAbbreviation());
-      }
+      displayRecipeDetails(recipe);
     } else {
       System.out.println("Recipe not found in the cookbook.");
     }
@@ -488,22 +309,17 @@ public class UserInterface {
    * Checks if a recipe can be made with the current inventory.
    */
   private void checkIfRecipeCanBeMade() {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter the name of the recipe to check: ");
-    String name = scanner.nextLine().trim();
-
-    if (name.isEmpty()) {
-      System.out.println("Name cannot be empty.");
-      return;
-    }
-
-    Recipe recipe = cookbook.findRecipeByName(name);
+    String name = readNonEmptyString("Enter the name of the recipe to check: ");
+    Recipe recipe = recipeService.findRecipeByName(name);
     if (recipe != null) {
-      boolean canBeMade = recipe.canBeMadeFromInventory(foodInventory);
+      boolean canBeMade = recipeService.canRecipeBeMade(recipe,
+          inventoryService.getFoodInventory());
       if (canBeMade) {
-        System.out.println("You have all the necessary ingredients to make \"" + recipe.getName() + "\".");
+        System.out.println(
+            "You have all the necessary ingredients to make \"" + recipe.getName() + "\".");
       } else {
-        System.out.println("You do not have all the necessary ingredients to make \"" + recipe.getName() + "\".");
+        System.out.println(
+            "You do not have all the necessary ingredients to make \"" + recipe.getName() + "\".");
       }
     } else {
       System.out.println("Recipe not found in the cookbook.");
@@ -514,7 +330,8 @@ public class UserInterface {
    * Gets and displays recipes that can be made with the current inventory.
    */
   private void getRecipesCanBeMade() {
-    List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(foodInventory);
+    List<Recipe> availableRecipes = recipeService.getRecipesCanBeMade(
+        inventoryService.getFoodInventory());
     if (availableRecipes.isEmpty()) {
       System.out.println("No recipes can be made with the current inventory.");
     } else {
@@ -530,99 +347,12 @@ public class UserInterface {
    *
    * @return the created {@code Ingredient}, or {@code null} if creation failed
    */
-  public Ingredient createIngredient() {
-    Scanner scanner = new Scanner(System.in);
-    String name;
-    double quantity;
-    Unit unit;
-    LocalDate bestBeforeDate;
-    double pricePerUnit;
-
-    while (true) {
-      System.out.print("Enter ingredient name: ");
-      name = scanner.nextLine().trim();
-      if (!name.isEmpty()) {
-        break;
-      }
-      System.out.println("Name cannot be empty. Please try again.");
-    }
-
-    while (true) {
-      System.out.println("Select unit of measurement:");
-      System.out.println("1. Liter (L)");
-      System.out.println("2. Deciliter (dl)");
-      System.out.println("3. Kilogram (kg)");
-      System.out.println("4. Gram (g)");
-      System.out.println("5. Piece (pcs)");
-      System.out.print("Enter your choice (1-5): ");
-      String unitChoice = scanner.nextLine().trim();
-      switch (unitChoice) {
-        case "1":
-          unit = Unit.LITER;
-          break;
-        case "2":
-          unit = Unit.DECILITER;
-          break;
-        case "3":
-          unit = Unit.KILOGRAM;
-          break;
-        case "4":
-          unit = Unit.GRAM;
-          break;
-        case "5":
-          unit = Unit.PIECE;
-          break;
-        default:
-          System.out.println("Invalid choice. Please select a valid unit.");
-          continue;
-      }
-      break;
-    }
-
-    while (true) {
-      System.out.print("Enter quantity (" + unit.getAbbreviation() + "): ");
-      String quantityInput = scanner.nextLine().trim();
-      try {
-        quantity = Double.parseDouble(quantityInput);
-        if (quantity > 0) {
-          break;
-        } else {
-          System.out.println("Quantity must be a positive number.");
-        }
-      } catch (NumberFormatException e) {
-        System.out.println("Invalid number format. Please enter a valid number.");
-      }
-    }
-
-    while (true) {
-      System.out.print("Enter best-before date (YYYY-MM-DD): ");
-      String dateInput = scanner.nextLine().trim();
-      try {
-        bestBeforeDate = LocalDate.parse(dateInput);
-        if (!bestBeforeDate.isBefore(LocalDate.now())) {
-          break;
-        } else {
-          System.out.println("Best-before date cannot be in the past.");
-        }
-      } catch (DateTimeParseException e) {
-        System.out.println("Invalid date format. Please use YYYY-MM-DD.");
-      }
-    }
-
-    while (true) {
-      System.out.print("Enter price per unit (NOK): ");
-      String priceInput = scanner.nextLine().trim();
-      try {
-        pricePerUnit = Double.parseDouble(priceInput);
-        if (pricePerUnit > 0) {
-          break;
-        } else {
-          System.out.println("Price per unit must be a positive number.");
-        }
-      } catch (NumberFormatException e) {
-        System.out.println("Invalid number format. Please enter a valid number.");
-      }
-    }
+  private Ingredient createIngredient() {
+    String name = readNonEmptyString("Enter ingredient name: ");
+    Unit unit = selectUnit();
+    double quantity = readPositiveDouble("Enter quantity (" + unit.getAbbreviation() + "): ");
+    LocalDate bestBeforeDate = readFutureDate("Enter best-before date (YYYY-MM-DD): ");
+    double pricePerUnit = readPositiveDouble("Enter price per unit (NOK): ");
 
     try {
       Ingredient ingredient = new Ingredient(name, quantity, unit, bestBeforeDate, pricePerUnit);
@@ -632,5 +362,172 @@ public class UserInterface {
       System.out.println("Error creating ingredient: " + e.getMessage());
     }
     return null;
+  }
+
+  /**
+   * Reads and validates a non-empty string input from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the non-empty string input
+   */
+  private String readNonEmptyString(String prompt) {
+    String input;
+    while (true) {
+      System.out.print(prompt);
+      input = scanner.nextLine().trim();
+      if (!input.isEmpty()) {
+        break;
+      }
+      System.out.println("Input cannot be empty. Please try again.");
+    }
+    return input;
+  }
+
+  /**
+   * Reads a string input from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the string input
+   */
+  private String readString(String prompt) {
+    System.out.print(prompt);
+    return scanner.nextLine().trim();
+  }
+
+  /**
+   * Reads and validates a positive double from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the positive double value
+   */
+  private double readPositiveDouble(String prompt) {
+    double value;
+    while (true) {
+      System.out.print(prompt);
+      String input = scanner.nextLine().trim();
+      try {
+        value = Double.parseDouble(input);
+        if (value > 0) {
+          break;
+        } else {
+          System.out.println("Value must be positive.");
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Invalid number format. Please enter a valid number.");
+      }
+    }
+    return value;
+  }
+
+  /**
+   * Reads and validates a positive integer from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the positive integer value
+   */
+  private int readPositiveInt(String prompt) {
+    int value;
+    while (true) {
+      System.out.print(prompt);
+      String input = scanner.nextLine().trim();
+      try {
+        value = Integer.parseInt(input);
+        if (value > 0) {
+          break;
+        } else {
+          System.out.println("Value must be a positive integer.");
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Invalid number format. Please enter a valid integer.");
+      }
+    }
+    return value;
+  }
+
+  /**
+   * Reads and validates a date from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the LocalDate value
+   */
+  private LocalDate readDate(String prompt) {
+    LocalDate date;
+    while (true) {
+      System.out.print(prompt);
+      String dateInput = scanner.nextLine().trim();
+      try {
+        date = LocalDate.parse(dateInput);
+        break;
+      } catch (DateTimeParseException e) {
+        System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+      }
+    }
+    return date;
+  }
+
+  /**
+   * Reads and validates a future date from the user.
+   *
+   * @param prompt the prompt to display
+   * @return the LocalDate value in the future
+   */
+  private LocalDate readFutureDate(String prompt) {
+    LocalDate date;
+    while (true) {
+      date = readDate(prompt);
+      if (!date.isBefore(LocalDate.now())) {
+        break;
+      } else {
+        System.out.println("Date cannot be in the past. Please enter a future date.");
+      }
+    }
+    return date;
+  }
+
+  /**
+   * Allows the user to select a unit from available options.
+   *
+   * @return the selected Unit
+   */
+  private Unit selectUnit() {
+    Unit[] units = Unit.values();
+    while (true) {
+      System.out.println("Select unit of measurement:");
+      for (int i = 0; i < units.length; i++) {
+        System.out.println(
+            (i + 1) + ". " + units[i].name() + " (" + units[i].getAbbreviation() + ")");
+      }
+      System.out.print("Enter your choice (1-" + units.length + "): ");
+      String unitChoice = scanner.nextLine().trim();
+      try {
+        int choice = Integer.parseInt(unitChoice);
+        if (choice >= 1 && choice <= units.length) {
+          return units[choice - 1];
+        } else {
+          System.out.println("Invalid choice. Please select a valid unit.");
+        }
+      } catch (NumberFormatException e) {
+        System.out.println("Invalid input. Please enter a number.");
+      }
+    }
+  }
+
+  /**
+   * Displays the details of a recipe.
+   *
+   * @param recipe the recipe to display
+   */
+  private void displayRecipeDetails(Recipe recipe) {
+    System.out.println("\nRecipe found:");
+    System.out.println("Name: " + recipe.getName());
+    System.out.println("Description: " + recipe.getDescription());
+    System.out.println("Preparation Method: " + recipe.getPreparationMethod());
+    System.out.println("Servings: " + recipe.getServings());
+    System.out.println("Ingredients:");
+    for (Map.Entry<String, IngredientRequirement> entry : recipe.getIngredients().entrySet()) {
+      IngredientRequirement req = entry.getValue();
+      System.out.println(
+          "- " + entry.getKey() + ": " + req.getQuantity() + " " + req.getUnit().getAbbreviation());
+    }
   }
 }

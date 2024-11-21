@@ -15,7 +15,8 @@ public class Ingredient {
   private double pricePerUnit;
 
   /**
-   * Constructs an Ingredient with the specified name, quantity, unit, best-before date, and price per unit.
+   * Constructs an Ingredient with the specified name, quantity, unit, best-before date, and price
+   * per unit.
    *
    * @param name           the name of the ingredient; cannot be null or empty
    * @param quantity       the quantity of the ingredient; must be positive
@@ -24,28 +25,23 @@ public class Ingredient {
    * @param pricePerUnit   the price per unit; must be positive
    * @throws IllegalArgumentException if any parameter is invalid
    */
-  public Ingredient(String name, double quantity, Unit unit, LocalDate bestBeforeDate, double pricePerUnit) {
-    validateName(name);
-    validateQuantity(quantity);
-    validateUnit(unit);
-    validateBestBeforeDate(bestBeforeDate);
-    validatePricePerUnit(pricePerUnit);
-
-    this.name = name;
-    this.quantity = quantity;
-    this.unit = unit;
-    this.bestBeforeDate = bestBeforeDate;
-    this.pricePerUnit = pricePerUnit;
+  public Ingredient(String name, double quantity, Unit unit, LocalDate bestBeforeDate,
+      double pricePerUnit) {
+    this.name = validateName(name);
+    this.quantity = validatePositiveValue(quantity, "Quantity must be positive.");
+    this.unit = validateUnit(unit);
+    this.bestBeforeDate = validateBestBeforeDate(bestBeforeDate);
+    this.pricePerUnit = validatePositiveValue(pricePerUnit, "Price per unit must be positive.");
   }
 
+  // Getters and setters with validation
 
   public String getName() {
     return name;
   }
 
   public void setName(String name) {
-    validateName(name);
-    this.name = name;
+    this.name = validateName(name);
   }
 
   public double getQuantity() {
@@ -53,8 +49,7 @@ public class Ingredient {
   }
 
   public void setQuantity(double quantity) {
-    validateQuantity(quantity);
-    this.quantity = quantity;
+    this.quantity = validatePositiveValue(quantity, "Quantity must be positive.");
   }
 
   public Unit getUnit() {
@@ -62,8 +57,7 @@ public class Ingredient {
   }
 
   public void setUnit(Unit unit) {
-    validateUnit(unit);
-    this.unit = unit;
+    this.unit = validateUnit(unit);
   }
 
   public LocalDate getBestBeforeDate() {
@@ -71,8 +65,7 @@ public class Ingredient {
   }
 
   public void setBestBeforeDate(LocalDate bestBeforeDate) {
-    validateBestBeforeDate(bestBeforeDate);
-    this.bestBeforeDate = bestBeforeDate;
+    this.bestBeforeDate = validateBestBeforeDate(bestBeforeDate);
   }
 
   public double getPricePerUnit() {
@@ -80,47 +73,49 @@ public class Ingredient {
   }
 
   public void setPricePerUnit(double pricePerUnit) {
-    validatePricePerUnit(pricePerUnit);
-    this.pricePerUnit = pricePerUnit;
+    this.pricePerUnit = validatePositiveValue(pricePerUnit, "Price per unit must be positive.");
   }
 
+  // Validation methods
 
-  private void validateName(String name) {
+  private String validateName(String name) {
     if (name == null || name.trim().isEmpty()) {
-      throw new IllegalArgumentException("Name cannot be null or empty.");
+      throw new IllegalArgumentException("Ingredient name cannot be null or empty.");
     }
+    return name.trim();
   }
 
-  private void validateQuantity(double quantity) {
-    if (quantity <= 0) {
-      throw new IllegalArgumentException("Quantity must be positive.");
+  private double validatePositiveValue(double value, String errorMessage) {
+    if (value <= 0) {
+      throw new IllegalArgumentException(errorMessage);
     }
+    return value;
   }
 
-  private void validateUnit(Unit unit) {
+  private Unit validateUnit(Unit unit) {
     if (unit == null) {
       throw new IllegalArgumentException("Unit cannot be null.");
     }
+    return unit;
   }
 
-  private void validateBestBeforeDate(LocalDate bestBeforeDate) {
-    if (bestBeforeDate == null) {
+  private LocalDate validateBestBeforeDate(LocalDate date) {
+    if (date == null) {
       throw new IllegalArgumentException("Best-before date cannot be null.");
     }
+    return date;
   }
 
-  private void validatePricePerUnit(double pricePerUnit) {
-    if (pricePerUnit <= 0) {
-      throw new IllegalArgumentException("Price per unit must be positive.");
-    }
-  }
-
-  // equals and hashCode based on name and unit
+  // equals and hashCode methods based on name and unit
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
 
     Ingredient that = (Ingredient) o;
     return name.equalsIgnoreCase(that.name) && unit == that.unit;
@@ -133,6 +128,7 @@ public class Ingredient {
 
   @Override
   public String toString() {
-    return String.format("%s: %.2f %s (Best before: %s)", name, quantity, unit.getAbbreviation(), bestBeforeDate);
+    return String.format("%s: %.2f %s (Best before: %s)", name, quantity, unit.getAbbreviation(),
+        bestBeforeDate);
   }
 }

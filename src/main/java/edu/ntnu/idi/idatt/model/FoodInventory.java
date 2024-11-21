@@ -1,14 +1,22 @@
 package edu.ntnu.idi.idatt.model;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Manages a collection of ingredients in the food inventory.
+ * <p>
+ * This class allows adding ingredients to the inventory, removing quantities, finding ingredients
+ * by name, and retrieving ingredients based on their best-before dates.
+ * </p>
  */
 public class FoodInventory {
 
-  private Map<String, Ingredient> inventory;
+  private final Map<String, Ingredient> inventory;
 
   /**
    * Constructs an empty FoodInventory.
@@ -32,15 +40,18 @@ public class FoodInventory {
     if (inventory.containsKey(key)) {
       Ingredient existingIngredient = inventory.get(key);
 
-      if (!areUnitsCompatible(existingIngredient.getUnit(), ingredient.getUnit())) {
-        throw new IllegalArgumentException("Units are incompatible for ingredient: " + ingredient.getName());
+      if (!existingIngredient.getUnit().isCompatibleWith(ingredient.getUnit())) {
+        throw new IllegalArgumentException(
+            "Units are incompatible for ingredient: " + ingredient.getName());
       }
 
-      double existingQuantityInBaseUnit = convertToBaseUnit(existingIngredient.getQuantity(), existingIngredient.getUnit());
-      double newQuantityInBaseUnit = convertToBaseUnit(ingredient.getQuantity(), ingredient.getUnit());
+      double existingQuantityInBaseUnit = existingIngredient.getUnit()
+          .toBaseUnit(existingIngredient.getQuantity());
+      double newQuantityInBaseUnit = ingredient.getUnit().toBaseUnit(ingredient.getQuantity());
       double totalQuantityInBaseUnit = existingQuantityInBaseUnit + newQuantityInBaseUnit;
 
-      double totalQuantityInExistingUnit = convertFromBaseUnit(totalQuantityInBaseUnit, existingIngredient.getUnit());
+      double totalQuantityInExistingUnit = existingIngredient.getUnit()
+          .fromBaseUnit(totalQuantityInBaseUnit);
 
       existingIngredient.setQuantity(totalQuantityInExistingUnit);
 
@@ -69,7 +80,9 @@ public class FoodInventory {
   public boolean removeQuantity(String name, double quantity, Unit unit) {
     validateName(name);
     validateQuantity(quantity);
-    validateUnit(unit);
+    if (unit == null) {
+      throw new IllegalArgumentException("Unit cannot be null.");
+    }
 
     String key = name.toLowerCase();
     if (!inventory.containsKey(key)) {
@@ -78,18 +91,18 @@ public class FoodInventory {
 
     Ingredient ingredient = inventory.get(key);
 
-    if (!areUnitsCompatible(ingredient.getUnit(), unit)) {
+    if (!ingredient.getUnit().isCompatibleWith(unit)) {
       throw new IllegalArgumentException("Units are incompatible for ingredient: " + name);
     }
 
-    double currentQuantityInBaseUnit = convertToBaseUnit(ingredient.getQuantity(), ingredient.getUnit());
-    double quantityToRemoveInBaseUnit = convertToBaseUnit(quantity, unit);
+    double currentQuantityInBaseUnit = ingredient.getUnit().toBaseUnit(ingredient.getQuantity());
+    double quantityToRemoveInBaseUnit = unit.toBaseUnit(quantity);
 
     if (currentQuantityInBaseUnit <= quantityToRemoveInBaseUnit) {
       inventory.remove(key);
     } else {
       double newQuantityInBaseUnit = currentQuantityInBaseUnit - quantityToRemoveInBaseUnit;
-      double newQuantityInExistingUnit = convertFromBaseUnit(newQuantityInBaseUnit, ingredient.getUnit());
+      double newQuantityInExistingUnit = ingredient.getUnit().fromBaseUnit(newQuantityInBaseUnit);
       ingredient.setQuantity(newQuantityInExistingUnit);
     }
     return true;
@@ -141,80 +154,27 @@ public class FoodInventory {
     return expiringIngredients;
   }
 
-  // Validation methods
-
+  /**
+   * Validates that the name is not null or empty.
+   *
+   * @param name the name to validate
+   * @throws IllegalArgumentException if the name is null or empty
+   */
   private void validateName(String name) {
     if (name == null || name.trim().isEmpty()) {
-      throw new IllegalArgumentException("Name cannot be null or empty.");
+      throw new IllegalArgumentException("Ingredient name cannot be null or empty.");
     }
   }
 
+  /**
+   * Validates that the quantity is positive.
+   *
+   * @param quantity the quantity to validate
+   * @throws IllegalArgumentException if the quantity is not positive
+   */
   private void validateQuantity(double quantity) {
     if (quantity <= 0) {
-      throw new IllegalArgumentException("Quantity to remove must be positive.");
+      throw new IllegalArgumentException("Quantity must be positive.");
     }
-  }
-
-  private void validateUnit(Unit unit) {
-    if (unit == null) {
-      throw new IllegalArgumentException("Unit cannot be null.");
-    }
-  }
-
-  // Unit conversion and compatibility methods
-
-  private double convertToBaseUnit(double quantity, Unit unit) {
-    switch (unit) {
-      case GRAM:
-        return quantity;
-      case KILOGRAM:
-        return quantity * 1000;
-      case DECILITER:
-        return quantity * 0.1;
-      case LITER:
-        return quantity;
-      case PIECE:
-        return quantity;
-      default:
-        throw new IllegalArgumentException("Unsupported unit: " + unit);
-    }
-  }
-
-  private double convertFromBaseUnit(double quantityInBaseUnit, Unit unit) {
-    switch (unit) {
-      case GRAM:
-        return quantityInBaseUnit;
-      case KILOGRAM:
-        return quantityInBaseUnit / 1000;
-      case DECILITER:
-        return quantityInBaseUnit * 10;
-      case LITER:
-        return quantityInBaseUnit;
-      case PIECE:
-        return quantityInBaseUnit;
-      default:
-        throw new IllegalArgumentException("Unsupported unit: " + unit);
-    }
-  }
-
-  private boolean areUnitsCompatible(Unit unit1, Unit unit2) {
-    if (unit1 == unit2) {
-      return true;
-    }
-    return (isMassUnit(unit1) && isMassUnit(unit2)) ||
-        (isVolumeUnit(unit1) && isVolumeUnit(unit2)) ||
-        (isCountUnit(unit1) && isCountUnit(unit2));
-  }
-
-  private boolean isMassUnit(Unit unit) {
-    return unit == Unit.GRAM || unit == Unit.KILOGRAM;
-  }
-
-  private boolean isVolumeUnit(Unit unit) {
-    return unit == Unit.LITER || unit == Unit.DECILITER;
-  }
-
-  private boolean isCountUnit(Unit unit) {
-    return unit == Unit.PIECE;
   }
 }

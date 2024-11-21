@@ -1,6 +1,7 @@
 package edu.ntnu.idi.idatt.model;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -23,117 +24,90 @@ class FoodInventoryTest {
     inventory = new FoodInventory();
   }
 
+  @DisplayName("Test removing a quantity from an ingredient updates the quantity correctly")
   @Test
   void testRemoveQuantity() {
-    // Arrange
     Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
     inventory.addIngredient(sugar);
 
-    // Act
     boolean result = inventory.removeQuantity("Sugar", 500, Unit.GRAM); // Remove 500 grams
 
-    // Assert
     assertTrue(result);
     Ingredient storedSugar = inventory.findIngredientByName("Sugar");
     assertNotNull(storedSugar);
     assertEquals(0.5, storedSugar.getQuantity(), 0.0001); // Remaining quantity should be 0.5 kg
   }
 
-  /**
-   * Tests that removing a quantity removes the ingredient when quantity becomes zero.
-   */
+  @DisplayName("Test removing a quantity that results in zero removes the ingredient from inventory")
   @Test
   void testRemoveQuantityRemovesIngredientWhenZero() {
-    // Arrange
     Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
     inventory.addIngredient(sugar);
 
-    // Act
     boolean result = inventory.removeQuantity("Sugar", 1.0, Unit.KILOGRAM); // Remove 1 kg
 
-    // Assert
     assertTrue(result);
     assertNull(inventory.findIngredientByName("Sugar"));
   }
 
-  /**
-   * Tests that removing a quantity with incompatible units throws an exception.
-   */
+  @DisplayName("Test removing a quantity with incompatible units throws an exception")
   @Test
   void testRemoveQuantityIncompatibleUnitsThrowsException() {
-    // Arrange
     Ingredient eggs = new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0);
     inventory.addIngredient(eggs);
 
-    // Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-      inventory.removeQuantity("Eggs", 500, Unit.GRAM); // Attempting to remove grams from pieces
+      inventory.removeQuantity("Eggs", 500, Unit.GRAM);
     });
+
     assertEquals("Units are incompatible for ingredient: Eggs", exception.getMessage());
   }
 
-  /**
-   * Tests that adding ingredients with compatible units updates the quantity correctly with conversions.
-   */
+  @DisplayName("Test adding ingredients with compatible volume units updates quantity with conversion")
   @Test
   void testAddIngredientWithUnitConversion() {
-    // Arrange
     Ingredient milkInLiters = new Ingredient("Milk", 2.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
     Ingredient milkInDeciliters = new Ingredient("Milk", 2.0, Unit.DECILITER, LocalDate.now().plusDays(7), 18.0);
 
-    // Act
     inventory.addIngredient(milkInLiters);
     inventory.addIngredient(milkInDeciliters);
 
-    // Assert
     Ingredient storedMilk = inventory.findIngredientByName("Milk");
     assertNotNull(storedMilk);
     assertEquals(2.2, storedMilk.getQuantity(), 0.0001);
     assertEquals(Unit.LITER, storedMilk.getUnit());
   }
 
-  /**
-   * Tests that adding ingredients with compatible mass units updates the quantity correctly with conversions.
-   */
+  @DisplayName("Test adding ingredients with compatible mass units updates quantity with conversion")
   @Test
   void testAddIngredientWithMassUnitConversion() {
-    // Arrange
     Ingredient flourInGrams = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
     Ingredient flourInKilograms = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25), 14.0);
 
-    // Act
     inventory.addIngredient(flourInGrams);
     inventory.addIngredient(flourInKilograms);
 
-    // Assert
     Ingredient storedFlour = inventory.findIngredientByName("Flour");
     assertNotNull(storedFlour);
     assertEquals(1500, storedFlour.getQuantity(), 0.0001); // Quantity in grams
     assertEquals(Unit.GRAM, storedFlour.getUnit()); // Original unit retained
   }
 
-  /**
-   * Tests that adding an ingredient with an incompatible unit throws an exception.
-   */
+  @DisplayName("Test adding an ingredient with incompatible units throws an exception")
   @Test
   void testAddIngredientIncompatibleUnitsThrowsException() {
-    // Arrange
     Ingredient milkInLiters = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
     Ingredient milkInGrams = new Ingredient("Milk", 500, Unit.GRAM, LocalDate.now().plusDays(60), 25.0);
 
-    // Act
     inventory.addIngredient(milkInLiters);
 
-    // Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       inventory.addIngredient(milkInGrams);
     });
     assertEquals("Units are incompatible for ingredient: Milk", exception.getMessage());
   }
 
-  /**
-   * Tests that an ingredient can be added to the inventory.
-   */
+  @DisplayName("Test adding a valid ingredient to the inventory")
   @Test
   void testAddIngredient() {
     Ingredient milk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
@@ -144,20 +118,17 @@ class FoodInventoryTest {
     assertEquals(milk, inventory.findIngredientByName("Milk"));
   }
 
-  /**
-   * Tests that adding a null ingredient throws an exception.
-   */
+  @DisplayName("Test adding a null ingredient throws an exception")
   @Test
   void testAddNullIngredientThrowsException() {
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       inventory.addIngredient(null);
     });
+
     assertEquals("Ingredient cannot be null.", exception.getMessage());
   }
 
-  /**
-   * Tests that adding ingredients with compatible units updates the quantity.
-   */
+  @DisplayName("Test adding ingredients with compatible units updates the quantity correctly")
   @Test
   void testAddIngredientUpdatesQuantityWithCompatibleUnits() {
     Ingredient flour1 = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
@@ -168,13 +139,11 @@ class FoodInventoryTest {
 
     Ingredient storedFlour = inventory.findIngredientByName("Flour");
     assertNotNull(storedFlour);
-    assertEquals(1500, storedFlour.getQuantity()); // Quantity in grams
-    assertEquals(Unit.GRAM, storedFlour.getUnit()); // Original unit retained
+    assertEquals(1500, storedFlour.getQuantity());
+    assertEquals(Unit.GRAM, storedFlour.getUnit());
   }
 
-  /**
-   * Tests that getting all ingredients returns a sorted list.
-   */
+  @DisplayName("Test retrieving all ingredients returns a sorted list by name")
   @Test
   void testGetAllIngredientsSortedByName() {
     Ingredient milk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);

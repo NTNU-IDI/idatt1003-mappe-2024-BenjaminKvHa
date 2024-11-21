@@ -6,20 +6,20 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Represents a recipe with a name, description, preparation method,
- * a list of ingredients with required quantities and units, and the number of servings.
+ * Represents a recipe with a name, description, preparation method, a list of ingredients with
+ * required quantities and units, and the number of servings.
  */
 public class Recipe {
 
-  private String name;
+  private final String name;
   private String description;
   private String preparationMethod;
-  private Map<String, IngredientRequirement> ingredients;
+  private final Map<String, IngredientRequirement> ingredients;
   private int servings;
 
   /**
-   * Constructs a Recipe with the specified name, description, preparation method,
-   * and number of servings.
+   * Constructs a Recipe with the specified name, description, preparation method, and number of
+   * servings.
    *
    * @param name              the name of the recipe; cannot be null or empty
    * @param description       a short description; cannot be null or empty
@@ -28,15 +28,10 @@ public class Recipe {
    * @throws IllegalArgumentException if any parameter is invalid
    */
   public Recipe(String name, String description, String preparationMethod, int servings) {
-    validateName(name);
-    validateDescription(description);
-    validatePreparationMethod(preparationMethod);
-    validateServings(servings);
-
-    this.name = name;
-    this.description = description;
-    this.preparationMethod = preparationMethod;
-    this.servings = servings;
+    this.name = validateName(name);
+    this.description = validateDescription(description);
+    this.preparationMethod = validatePreparationMethod(preparationMethod);
+    this.servings = validateServings(servings);
     this.ingredients = new HashMap<>();
   }
 
@@ -49,13 +44,15 @@ public class Recipe {
    * @throws IllegalArgumentException if any parameter is invalid
    */
   public void addIngredient(String ingredientName, double quantity, Unit unit) {
-    validateIngredientName(ingredientName);
-    validateQuantity(quantity);
-    validateUnit(unit);
+    String validatedName = validateIngredientName(ingredientName);
+    double validatedQuantity = validateQuantity(quantity);
+    Unit validatedUnit = validateUnit(unit);
 
-    String key = ingredientName.toLowerCase();
-    ingredients.put(key, new IngredientRequirement(quantity, unit));
+    String key = validatedName.toLowerCase();
+    ingredients.put(key, new IngredientRequirement(validatedQuantity, validatedUnit));
   }
+
+  // Getters and setters
 
   /**
    * Returns an unmodifiable map of ingredients and their requirements.
@@ -70,18 +67,12 @@ public class Recipe {
     return name;
   }
 
-  public void setName(String name) {
-    validateName(name);
-    this.name = name;
-  }
-
   public String getDescription() {
     return description;
   }
 
   public void setDescription(String description) {
-    validateDescription(description);
-    this.description = description;
+    this.description = validateDescription(description);
   }
 
   public String getPreparationMethod() {
@@ -89,8 +80,7 @@ public class Recipe {
   }
 
   public void setPreparationMethod(String preparationMethod) {
-    validatePreparationMethod(preparationMethod);
-    this.preparationMethod = preparationMethod;
+    this.preparationMethod = validatePreparationMethod(preparationMethod);
   }
 
   public int getServings() {
@@ -98,71 +88,65 @@ public class Recipe {
   }
 
   public void setServings(int servings) {
-    validateServings(servings);
-    this.servings = servings;
+    this.servings = validateServings(servings);
   }
 
-  private void validateName(String name) {
+  // Validation methods returning values
+
+  private String validateName(String name) {
     if (name == null || name.trim().isEmpty()) {
-      throw new IllegalArgumentException("Name cannot be null or empty.");
+      throw new IllegalArgumentException("Recipe name cannot be null or empty.");
     }
+    return name.trim();
   }
 
-  private void validateDescription(String description) {
+  private String validateDescription(String description) {
     if (description == null || description.trim().isEmpty()) {
       throw new IllegalArgumentException("Description cannot be null or empty.");
     }
+    return description.trim();
   }
 
-  private void validatePreparationMethod(String preparationMethod) {
+  private String validatePreparationMethod(String preparationMethod) {
     if (preparationMethod == null || preparationMethod.trim().isEmpty()) {
       throw new IllegalArgumentException("Preparation method cannot be null or empty.");
     }
+    return preparationMethod.trim();
   }
 
-  private void validateServings(int servings) {
+  private int validateServings(int servings) {
     if (servings <= 0) {
       throw new IllegalArgumentException("Servings must be positive.");
     }
+    return servings;
   }
 
-  private void validateIngredientName(String ingredientName) {
+  private String validateIngredientName(String ingredientName) {
     if (ingredientName == null || ingredientName.trim().isEmpty()) {
       throw new IllegalArgumentException("Ingredient name cannot be null or empty.");
     }
+    return ingredientName.trim();
   }
 
-  private void validateQuantity(double quantity) {
+  private double validateQuantity(double quantity) {
     if (quantity <= 0) {
       throw new IllegalArgumentException("Quantity must be positive.");
     }
+    return quantity;
   }
 
-  private void validateUnit(Unit unit) {
+  private Unit validateUnit(Unit unit) {
     if (unit == null) {
       throw new IllegalArgumentException("Unit cannot be null.");
     }
+    return unit;
   }
 
-  // equals and hashCode methods based on name
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    Recipe recipe = (Recipe) o;
-    return name.equalsIgnoreCase(recipe.name);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(name.toLowerCase());
-  }
+  // Other methods, including equals, hashCode, and canBeMadeFromInventory...
 
   /**
-   * Checks if the required ingredients are available in the provided inventory.
-   * Performs unit conversions where necessary.
+   * Checks if the required ingredients are available in the provided inventory. Performs unit
+   * conversions where necessary.
    *
    * @param inventory the food inventory to check against; cannot be null
    * @return true if all ingredients are available in sufficient quantities, false otherwise
@@ -174,77 +158,47 @@ public class Recipe {
     }
 
     for (Map.Entry<String, IngredientRequirement> entry : ingredients.entrySet()) {
-      String ingredientName = entry.getKey();
-      IngredientRequirement requirement = entry.getValue();
-
-      Ingredient ingredient = inventory.findIngredientByName(ingredientName);
-      if (ingredient == null) {
-        return false;
-      }
-
-      if (!requirement.getUnit().equals(ingredient.getUnit()) && !areUnitsCompatible(requirement.getUnit(), ingredient.getUnit())) {
-        return false;
-      }
-
-      double requiredQuantityInBaseUnit = convertToBaseUnit(requirement.getQuantity(), requirement.getUnit());
-      double availableQuantityInBaseUnit = convertToBaseUnit(ingredient.getQuantity(), ingredient.getUnit());
-
-      if (availableQuantityInBaseUnit < requiredQuantityInBaseUnit) {
+      if (!isIngredientAvailable(entry.getKey(), entry.getValue(), inventory)) {
         return false;
       }
     }
     return true;
   }
 
-  /**
-   * Converts a quantity to its base unit (grams for mass, liters for volume).
-   *
-   * @param quantity the quantity to convert
-   * @param unit     the unit of the quantity
-   * @return the quantity converted to the base unit
-   */
-  private double convertToBaseUnit(double quantity, Unit unit) {
-    switch (unit) {
-      case GRAM:
-        return quantity;
-      case KILOGRAM:
-        return quantity * 1000;
-      case DECILITER:
-        return quantity * 0.1;
-      case LITER:
-        return quantity;
-      case PIECE:
-        return quantity;
-      default:
-        throw new IllegalArgumentException("Unsupported unit: " + unit);
+  private boolean isIngredientAvailable(String ingredientName, IngredientRequirement requirement,
+      FoodInventory inventory) {
+    Ingredient ingredient = inventory.findIngredientByName(ingredientName);
+    if (ingredient == null) {
+      return false;
     }
+
+    if (!requirement.getUnit().isCompatibleWith(ingredient.getUnit())) {
+      return false;
+    }
+
+    double requiredQuantityInBaseUnit = requirement.getUnit().toBaseUnit(requirement.getQuantity());
+    double availableQuantityInBaseUnit = ingredient.getUnit().toBaseUnit(ingredient.getQuantity());
+
+    return availableQuantityInBaseUnit >= requiredQuantityInBaseUnit;
   }
 
-  /**
-   * Checks if two units are compatible (mass with mass, volume with volume, count with count).
-   *
-   * @param unit1 the first unit
-   * @param unit2 the second unit
-   * @return true if units are compatible, false otherwise
-   */
-  private boolean areUnitsCompatible(Unit unit1, Unit unit2) {
-    if (unit1 == unit2) {
+  // equals and hashCode methods based on name
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    return (isMassUnit(unit1) && isMassUnit(unit2)) ||
-        (isVolumeUnit(unit1) && isVolumeUnit(unit2)) ||
-        (isCountUnit(unit1) && isCountUnit(unit2));
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    Recipe recipe = (Recipe) o;
+    return name.equalsIgnoreCase(recipe.name);
   }
 
-  private boolean isMassUnit(Unit unit) {
-    return unit == Unit.GRAM || unit == Unit.KILOGRAM;
-  }
-
-  private boolean isVolumeUnit(Unit unit) {
-    return unit == Unit.LITER || unit == Unit.DECILITER;
-  }
-
-  private boolean isCountUnit(Unit unit) {
-    return unit == Unit.PIECE;
+  @Override
+  public int hashCode() {
+    return Objects.hash(name.toLowerCase());
   }
 }

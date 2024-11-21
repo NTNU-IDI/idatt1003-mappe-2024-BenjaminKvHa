@@ -1,6 +1,7 @@
 package edu.ntnu.idi.idatt.model;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -50,56 +51,70 @@ class CookbookTest {
     omeletteRecipe.addIngredient("Milk", 0.5, Unit.DECILITER);
   }
 
-  /**
-   * Tests that a recipe can be added to the cookbook.
-   */
+  @DisplayName("Test that a recipe can be added to the cookbook")
   @Test
   void testAddRecipe() {
-    // Arrange
-    // Done in setUp()
-
-    // Act
     cookbook.addRecipe(pancakeRecipe);
 
-    // Assert
     assertEquals(1, cookbook.getAllRecipes().size());
     assertTrue(cookbook.getAllRecipes().contains(pancakeRecipe));
   }
 
-  /**
-   * Tests that adding a null recipe throws an exception.
-   */
+  @DisplayName("Test that adding a null recipe throws an exception")
   @Test
   void testAddNullRecipeThrowsException() {
-    // Arrange, Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       cookbook.addRecipe(null);
     });
+
     assertEquals("Recipe cannot be null.", exception.getMessage());
   }
 
-  /**
-   * Tests that finding a recipe by name works correctly.
-   */
+  @DisplayName("Test that adding a duplicate recipe throws an exception")
   @Test
-  void testFindRecipeByName() {
-    // Arrange
+  void testAddDuplicateRecipeThrowsException() {
     cookbook.addRecipe(pancakeRecipe);
 
-    // Act
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      cookbook.addRecipe(pancakeRecipe);
+    });
+
+    assertEquals("Recipe already exists in the cookbook.", exception.getMessage());
+  }
+
+  @DisplayName("Test that a recipe can be found by name")
+  @Test
+  void testFindRecipeByName() {
+    cookbook.addRecipe(pancakeRecipe);
+
     Recipe foundRecipe = cookbook.findRecipeByName("Pancakes");
 
-    // Assert
     assertNotNull(foundRecipe);
     assertEquals(pancakeRecipe, foundRecipe);
   }
 
-  /**
-   * Tests that getting recipes that can be made returns the correct list.
-   */
+  @DisplayName("Test that finding a recipe with a null name throws an exception")
+  @Test
+  void testFindRecipeByNameNullThrowsException() {
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      cookbook.findRecipeByName(null);
+    });
+
+    assertEquals("Recipe name cannot be null or empty.", exception.getMessage());
+  }
+
+  @DisplayName("Test that all recipes are retrieved from an empty cookbook")
+  @Test
+  void testGetAllRecipesEmptyCookbook() {
+    List<Recipe> allRecipes = cookbook.getAllRecipes();
+
+    assertNotNull(allRecipes);
+    assertTrue(allRecipes.isEmpty());
+  }
+
+  @DisplayName("Test that recipes that can be made are correctly identified")
   @Test
   void testGetRecipesCanBeMade() {
-    // Arrange
     cookbook.addRecipe(pancakeRecipe);
     cookbook.addRecipe(omeletteRecipe);
 
@@ -109,47 +124,86 @@ class CookbookTest {
     inventory.addIngredient(new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
     inventory.addIngredient(new Ingredient("Cheese", 100, Unit.GRAM, LocalDate.now().plusDays(15), 50.0));
 
-    // Act
     List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(inventory);
 
-    // Assert
     assertEquals(2, availableRecipes.size());
     assertTrue(availableRecipes.contains(pancakeRecipe));
     assertTrue(availableRecipes.contains(omeletteRecipe));
   }
 
-  /**
-   * Tests that recipes with missing ingredients are not included in the available recipes.
-   */
+  @DisplayName("Test that recipes that cannot be made are correctly identified")
   @Test
-  void testGetRecipesCanBeMadeMissingIngredients() {
-    // Arrange
+  void testGetRecipesCannotBeMade() {
     cookbook.addRecipe(pancakeRecipe);
     cookbook.addRecipe(omeletteRecipe);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
-    inventory.addIngredient(new Ingredient("Eggs", 2, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
+    inventory.addIngredient(new Ingredient("Milk", 0.5, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
 
-    // Act
-    List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(inventory);
+    List<Recipe> cannotMakeRecipes = cookbook.getRecipesCannotBeMade(inventory);
 
-    // Assert
-    assertEquals(0, availableRecipes.size());
+    assertEquals(2, cannotMakeRecipes.size());
+    assertTrue(cannotMakeRecipes.contains(pancakeRecipe));
+    assertTrue(cannotMakeRecipes.contains(omeletteRecipe));
   }
 
-  /**
-   * Tests that passing a null inventory to getRecipesCanBeMade throws an exception.
-   */
+  @DisplayName("Test that passing a null inventory throws an exception")
   @Test
   void testGetRecipesCanBeMadeNullInventoryThrowsException() {
-    // Arrange
     cookbook.addRecipe(pancakeRecipe);
 
-    // Act & Assert
     Exception exception = assertThrows(IllegalArgumentException.class, () -> {
       cookbook.getRecipesCanBeMade(null);
     });
     assertEquals("Inventory cannot be null.", exception.getMessage());
+  }
+
+  @DisplayName("Test that a recipe can be removed from the cookbook")
+  @Test
+  void testRemoveRecipe() {
+    cookbook.addRecipe(pancakeRecipe);
+    assertTrue(cookbook.containsRecipe("Pancakes"));
+
+    boolean removed = cookbook.removeRecipe("Pancakes");
+
+    assertTrue(removed);
+    assertFalse(cookbook.containsRecipe("Pancakes"));
+  }
+
+  @DisplayName("Test that removing a recipe with a null name throws an exception")
+  @Test
+  void testRemoveRecipeNullThrowsException() {
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      cookbook.removeRecipe(null);
+    });
+
+    assertEquals("Recipe name cannot be null or empty.", exception.getMessage());
+  }
+
+  @DisplayName("Test that removing a non-existent recipe returns false")
+  @Test
+  void testRemoveNonexistentRecipe() {
+    boolean removed = cookbook.removeRecipe("Nonexistent Recipe");
+
+    assertFalse(removed);
+  }
+
+  @DisplayName("Test that containsRecipe works correctly")
+  @Test
+  void testContainsRecipe() {
+    cookbook.addRecipe(pancakeRecipe);
+
+    assertTrue(cookbook.containsRecipe("Pancakes"));
+    assertFalse(cookbook.containsRecipe("Nonexistent Recipe"));
+  }
+
+  @DisplayName("Test that containsRecipe with null name throws exception")
+  @Test
+  void testContainsRecipeNullThrowsException() {
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      cookbook.containsRecipe(null);
+    });
+
+    assertEquals("Recipe name cannot be null or empty.", exception.getMessage());
   }
 }
