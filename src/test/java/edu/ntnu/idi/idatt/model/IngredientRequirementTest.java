@@ -1,10 +1,11 @@
 package edu.ntnu.idi.idatt.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link IngredientRequirement} class.
@@ -73,5 +74,22 @@ class IngredientRequirementTest {
   @Test
   void testGetUnit() {
     assertEquals(Unit.GRAM, ingredientRequirement.getUnit());
+  }
+
+  @DisplayName("Test that two IngredientRequirements with the same quantity and unit are equal")
+  @Test
+  void testEqualsAndHashCode() {
+    IngredientRequirement requirement1 = new IngredientRequirement(200, Unit.GRAM);
+    IngredientRequirement requirement2 = new IngredientRequirement(200, Unit.GRAM);
+
+    assertEquals(requirement1, requirement2);
+    assertEquals(requirement1.hashCode(), requirement2.hashCode());
+  }
+
+  @DisplayName("Test that toString method returns the correct string representation")
+  @Test
+  void testToString() {
+    String expectedString = "200,00 g";
+    assertEquals(expectedString, ingredientRequirement.toString());
   }
 }

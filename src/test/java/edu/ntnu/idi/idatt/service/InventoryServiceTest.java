@@ -1,16 +1,18 @@
 package edu.ntnu.idi.idatt.service;
 
-import edu.ntnu.idi.idatt.model.FoodInventory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import edu.ntnu.idi.idatt.model.Ingredient;
 import edu.ntnu.idi.idatt.model.Unit;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link InventoryService} class.
@@ -28,7 +30,8 @@ class InventoryServiceTest {
   @DisplayName("Test adding a new ingredient to the inventory")
   @Test
   void testAddIngredient() {
-    Ingredient newIngredient = new Ingredient("Butter", 500, Unit.GRAM, LocalDate.now().plusDays(20), 40.0);
+    Ingredient newIngredient = new Ingredient("Butter", 500, Unit.GRAM,
+        LocalDate.now().plusDays(20), 40.0);
     inventoryService.addIngredient(newIngredient);
 
     Ingredient retrievedIngredient = inventoryService.findIngredientByName("Butter");
@@ -40,7 +43,8 @@ class InventoryServiceTest {
   @DisplayName("Test adding an existing ingredient updates the quantity")
   @Test
   void testAddIngredientExisting() {
-    Ingredient additionalMilk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(7), 22.0);
+    Ingredient additionalMilk = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(7),
+        22.0);
     inventoryService.addIngredient(additionalMilk);
 
     Ingredient retrievedIngredient = inventoryService.findIngredientByName("Milk");
@@ -59,18 +63,6 @@ class InventoryServiceTest {
 
     assertNotNull(eggs);
     assertEquals(6, eggs.getQuantity());
-  }
-
-  @DisplayName("Test removing more quantity than available removes the ingredient")
-  @Test
-  void testRemoveQuantityInsufficient() {
-    boolean result = inventoryService.removeQuantity("Eggs", 20, Unit.PIECE);
-
-    assertTrue(result, "Expected removeQuantity to return true and remove the ingredient.");
-
-    Ingredient eggs = inventoryService.findIngredientByName("Eggs");
-
-    assertNull(eggs, "Eggs should be removed from the inventory.");
   }
 
   @DisplayName("Test finding an ingredient that exists in the inventory")

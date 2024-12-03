@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Represents a cookbook containing a collection of recipes.
@@ -74,14 +75,11 @@ public class Cookbook {
       throw new IllegalArgumentException("Inventory cannot be null.");
     }
 
-    List<Recipe> availableRecipes = new ArrayList<>();
-    for (Recipe recipe : recipes.values()) {
-      if (recipe.canBeMadeFromInventory(inventory)) {
-        availableRecipes.add(recipe);
-      }
-    }
-    return availableRecipes;
+    return recipes.values().stream()
+        .filter(recipe -> recipe.canBeMadeFromInventory(inventory))
+        .collect(Collectors.toList());
   }
+
 
   /**
    * Validates that the name is not null or empty.

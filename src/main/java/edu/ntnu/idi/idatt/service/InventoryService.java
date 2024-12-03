@@ -12,13 +12,13 @@ import java.util.List;
  * <p>
  * The {@code InventoryService} class acts as an intermediary between the user interface and the
  * underlying {@link FoodInventory} model. It encapsulates all business logic related to managing
- * ingredients in the inventory, such as adding ingredients, removing quantities, finding ingredients,
- * and retrieving ingredients based on expiration dates.
+ * ingredients in the inventory, such as adding ingredients, removing quantities, finding
+ * ingredients, and retrieving ingredients based on expiration dates.
  * </p>
  *
  * <p>
- * This class ensures that the {@link FoodInventory} is manipulated in a controlled manner, enforcing
- * validation rules and providing a clean API for higher layers of the application.
+ * This class ensures that the {@link FoodInventory} is manipulated in a controlled manner,
+ * enforcing validation rules and providing a clean API for higher layers of the application.
  * </p>
  */
 public class InventoryService {

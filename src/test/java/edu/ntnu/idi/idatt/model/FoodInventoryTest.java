@@ -1,13 +1,16 @@
 package edu.ntnu.idi.idatt.model;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for the {@link FoodInventory} class.
@@ -27,27 +30,42 @@ class FoodInventoryTest {
   @DisplayName("Test removing a quantity from an ingredient updates the quantity correctly")
   @Test
   void testRemoveQuantity() {
-    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
+    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365),
+        10.0);
     inventory.addIngredient(sugar);
 
-    boolean result = inventory.removeQuantity("Sugar", 500, Unit.GRAM); // Remove 500 grams
+    boolean result = inventory.removeQuantity("Sugar", 500, Unit.GRAM);
 
     assertTrue(result);
     Ingredient storedSugar = inventory.findIngredientByName("Sugar");
     assertNotNull(storedSugar);
-    assertEquals(0.5, storedSugar.getQuantity(), 0.0001); // Remaining quantity should be 0.5 kg
+    assertEquals(0.5, storedSugar.getQuantity(), 0.0001);
   }
 
   @DisplayName("Test removing a quantity that results in zero removes the ingredient from inventory")
   @Test
   void testRemoveQuantityRemovesIngredientWhenZero() {
-    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
+    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365),
+        10.0);
     inventory.addIngredient(sugar);
 
-    boolean result = inventory.removeQuantity("Sugar", 1.0, Unit.KILOGRAM); // Remove 1 kg
+    boolean result = inventory.removeQuantity("Sugar", 1.0, Unit.KILOGRAM);
 
     assertTrue(result);
     assertNull(inventory.findIngredientByName("Sugar"));
+  }
+
+  @DisplayName("Test removing more quantity than available throws an exception")
+  @Test
+  void testRemoveQuantityExceedsAvailableThrowsException() {
+    Ingredient sugar = new Ingredient("Sugar", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(365), 10.0);
+    inventory.addIngredient(sugar);
+
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      inventory.removeQuantity("Sugar", 2.0, Unit.KILOGRAM);
+    });
+
+    assertEquals("Insufficient quantity of Sugar to remove the requested amount.", exception.getMessage());
   }
 
   @DisplayName("Test removing a quantity with incompatible units throws an exception")
@@ -66,8 +84,10 @@ class FoodInventoryTest {
   @DisplayName("Test adding ingredients with compatible volume units updates quantity with conversion")
   @Test
   void testAddIngredientWithUnitConversion() {
-    Ingredient milkInLiters = new Ingredient("Milk", 2.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
-    Ingredient milkInDeciliters = new Ingredient("Milk", 2.0, Unit.DECILITER, LocalDate.now().plusDays(7), 18.0);
+    Ingredient milkInLiters = new Ingredient("Milk", 2.0, Unit.LITER, LocalDate.now().plusDays(5),
+        20.0);
+    Ingredient milkInDeciliters = new Ingredient("Milk", 2.0, Unit.DECILITER,
+        LocalDate.now().plusDays(7), 18.0);
 
     inventory.addIngredient(milkInLiters);
     inventory.addIngredient(milkInDeciliters);
@@ -81,23 +101,27 @@ class FoodInventoryTest {
   @DisplayName("Test adding ingredients with compatible mass units updates quantity with conversion")
   @Test
   void testAddIngredientWithMassUnitConversion() {
-    Ingredient flourInGrams = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
-    Ingredient flourInKilograms = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25), 14.0);
+    Ingredient flourInGrams = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30),
+        15.0);
+    Ingredient flourInKilograms = new Ingredient("Flour", 1.0, Unit.KILOGRAM,
+        LocalDate.now().plusDays(25), 14.0);
 
     inventory.addIngredient(flourInGrams);
     inventory.addIngredient(flourInKilograms);
 
     Ingredient storedFlour = inventory.findIngredientByName("Flour");
     assertNotNull(storedFlour);
-    assertEquals(1500, storedFlour.getQuantity(), 0.0001); // Quantity in grams
-    assertEquals(Unit.GRAM, storedFlour.getUnit()); // Original unit retained
+    assertEquals(1500, storedFlour.getQuantity(), 0.0001);
+    assertEquals(Unit.GRAM, storedFlour.getUnit());
   }
 
   @DisplayName("Test adding an ingredient with incompatible units throws an exception")
   @Test
   void testAddIngredientIncompatibleUnitsThrowsException() {
-    Ingredient milkInLiters = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0);
-    Ingredient milkInGrams = new Ingredient("Milk", 500, Unit.GRAM, LocalDate.now().plusDays(60), 25.0);
+    Ingredient milkInLiters = new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5),
+        20.0);
+    Ingredient milkInGrams = new Ingredient("Milk", 500, Unit.GRAM, LocalDate.now().plusDays(60),
+        25.0);
 
     inventory.addIngredient(milkInLiters);
 
@@ -132,7 +156,8 @@ class FoodInventoryTest {
   @Test
   void testAddIngredientUpdatesQuantityWithCompatibleUnits() {
     Ingredient flour1 = new Ingredient("Flour", 500, Unit.GRAM, LocalDate.now().plusDays(30), 15.0);
-    Ingredient flour2 = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25), 14.0);
+    Ingredient flour2 = new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(25),
+        14.0);
 
     inventory.addIngredient(flour1);
     inventory.addIngredient(flour2);

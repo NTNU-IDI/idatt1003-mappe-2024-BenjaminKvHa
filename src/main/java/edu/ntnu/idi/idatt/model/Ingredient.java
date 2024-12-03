@@ -103,6 +103,9 @@ public class Ingredient {
     if (date == null) {
       throw new IllegalArgumentException("Best-before date cannot be null.");
     }
+    if (date.isBefore(LocalDate.now())) {
+      throw new IllegalArgumentException("Best-before date cannot be in the past.");
+    }
     return date;
   }
 

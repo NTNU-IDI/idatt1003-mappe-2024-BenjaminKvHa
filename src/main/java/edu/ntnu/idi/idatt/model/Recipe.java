@@ -157,13 +157,10 @@ public class Recipe {
       throw new IllegalArgumentException("Inventory cannot be null.");
     }
 
-    for (Map.Entry<String, IngredientRequirement> entry : ingredients.entrySet()) {
-      if (!isIngredientAvailable(entry.getKey(), entry.getValue(), inventory)) {
-        return false;
-      }
-    }
-    return true;
+    return ingredients.entrySet().stream()
+        .allMatch(entry -> isIngredientAvailable(entry.getKey(), entry.getValue(), inventory));
   }
+
 
   private boolean isIngredientAvailable(String ingredientName, IngredientRequirement requirement,
       FoodInventory inventory) {
@@ -182,7 +179,7 @@ public class Recipe {
     return availableQuantityInBaseUnit >= requiredQuantityInBaseUnit;
   }
 
-  // equals and hashCode methods based on name
+  // toString, equals and hashCode methods based on name
 
   @Override
   public boolean equals(Object o) {
@@ -195,6 +192,11 @@ public class Recipe {
 
     Recipe recipe = (Recipe) o;
     return name.equalsIgnoreCase(recipe.name);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Recipe{name='%s', servings=%d}", name, servings);
   }
 
   @Override

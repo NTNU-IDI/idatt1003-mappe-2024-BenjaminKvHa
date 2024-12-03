@@ -1,20 +1,23 @@
 package edu.ntnu.idi.idatt.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Unit tests for the {@link Cookbook} class.
  * <p>
- * This class tests the functionality of the Cookbook class, including adding recipes,
- * finding recipes by name, removing recipes, checking if a recipe exists, and retrieving
- * recipes that can or cannot be made from a given inventory.
+ * This class tests the functionality of the Cookbook class, including adding recipes, finding
+ * recipes by name, removing recipes, checking if a recipe exists, and retrieving recipes that can
+ * or cannot be made from a given inventory.
  * </p>
  */
 class CookbookTest {
@@ -119,10 +122,14 @@ class CookbookTest {
     cookbook.addRecipe(omeletteRecipe);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(30), 15.0));
-    inventory.addIngredient(new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
-    inventory.addIngredient(new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
-    inventory.addIngredient(new Ingredient("Cheese", 100, Unit.GRAM, LocalDate.now().plusDays(15), 50.0));
+    inventory.addIngredient(
+        new Ingredient("Flour", 1.0, Unit.KILOGRAM, LocalDate.now().plusDays(30), 15.0));
+    inventory.addIngredient(
+        new Ingredient("Milk", 1.0, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(
+        new Ingredient("Eggs", 12, Unit.PIECE, LocalDate.now().plusDays(10), 3.0));
+    inventory.addIngredient(
+        new Ingredient("Cheese", 100, Unit.GRAM, LocalDate.now().plusDays(15), 50.0));
 
     List<Recipe> availableRecipes = cookbook.getRecipesCanBeMade(inventory);
 
@@ -138,7 +145,8 @@ class CookbookTest {
     cookbook.addRecipe(omeletteRecipe);
 
     FoodInventory inventory = new FoodInventory();
-    inventory.addIngredient(new Ingredient("Milk", 0.5, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
+    inventory.addIngredient(
+        new Ingredient("Milk", 0.5, Unit.LITER, LocalDate.now().plusDays(5), 20.0));
 
     List<Recipe> cannotMakeRecipes = cookbook.getRecipesCannotBeMade(inventory);
 

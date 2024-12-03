@@ -1,7 +1,6 @@
 package edu.ntnu.idi.idatt;
 
 import edu.ntnu.idi.idatt.ui.UserInterface;
-import java.util.logging.Logger;
 
 /**
  * The entry point of the application.
@@ -12,8 +11,6 @@ import java.util.logging.Logger;
  * </p>
  */
 public class Main {
-
-  private static final Logger logger = Logger.getLogger(Main.class.getName());
 
   /**
    * The main method to run the application.
@@ -26,7 +23,7 @@ public class Main {
       ui.init();
       ui.start();
     } catch (Exception e) {
-      logger.severe("An unexpected error occurred: " + e.getMessage());
+      System.err.println("An unexpected error occurred: " + e.getMessage());
       e.printStackTrace();
       System.exit(1);
     }

@@ -1,5 +1,7 @@
 package edu.ntnu.idi.idatt.model;
 
+import java.util.Objects;
+
 /**
  * Represents the required quantity and unit of an ingredient in a recipe.
  */
@@ -64,5 +66,26 @@ public class IngredientRequirement {
       throw new IllegalArgumentException("Unit cannot be null.");
     }
     return unit;
+  }
+
+  // equals and hashCode methods based on name and unit
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    IngredientRequirement that = (IngredientRequirement) o;
+    return Double.compare(that.quantity, quantity) == 0 &&
+        unit == that.unit;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(quantity, unit);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("%.2f %s", quantity, unit.getAbbreviation());
   }
 }

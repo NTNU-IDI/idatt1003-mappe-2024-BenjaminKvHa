@@ -1,17 +1,18 @@
 package edu.ntnu.idi.idatt.service;
 
-import edu.ntnu.idi.idatt.model.FoodInventory;
-import edu.ntnu.idi.idatt.model.Ingredient;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import edu.ntnu.idi.idatt.model.Recipe;
 import edu.ntnu.idi.idatt.model.Unit;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the {@link RecipeService} class.
@@ -81,6 +82,16 @@ class RecipeServiceTest {
 
     assertNull(pizza);
   }
+
+  @DisplayName("Test that adding a null recipe throws an exception")
+  @Test
+  void testAddNullRecipeThrowsException() {
+    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+      recipeService.addRecipe(null);
+    });
+    assertEquals("Recipe cannot be null.", exception.getMessage());
+  }
+
 
   @DisplayName("Test retrieving all recipes from the cookbook")
   @Test

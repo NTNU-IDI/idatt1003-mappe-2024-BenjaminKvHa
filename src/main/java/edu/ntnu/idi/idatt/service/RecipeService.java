@@ -10,9 +10,9 @@ import java.util.List;
  *
  * <p>
  * The {@code RecipeService} class acts as an intermediary between the user interface and the
- * underlying {@link Cookbook} model. It encapsulates all business logic related to managing recipes,
- * such as adding new recipes, finding recipes by name, and determining which recipes can be made
- * with the current inventory.
+ * underlying {@link Cookbook} model. It encapsulates all business logic related to managing
+ * recipes, such as adding new recipes, finding recipes by name, and determining which recipes can
+ * be made with the current inventory.
  * </p>
  *
  * <p>

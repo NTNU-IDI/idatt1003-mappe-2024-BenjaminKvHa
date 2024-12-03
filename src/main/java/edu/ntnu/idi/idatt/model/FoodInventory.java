@@ -1,11 +1,11 @@
 package edu.ntnu.idi.idatt.model;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Manages a collection of ingredients in the food inventory.
@@ -75,7 +75,8 @@ public class FoodInventory {
    * @param quantity the quantity to remove; must be positive
    * @param unit     the unit of the quantity to remove; cannot be null
    * @return true if the quantity was removed, false if the ingredient was not found
-   * @throws IllegalArgumentException if any parameter is invalid or units are incompatible
+   * @throws IllegalArgumentException if any parameter is invalid, units are incompatible, or if the
+   *                                  quantity to remove exceeds the available quantity
    */
   public boolean removeQuantity(String name, double quantity, Unit unit) {
     validateName(name);
@@ -98,7 +99,11 @@ public class FoodInventory {
     double currentQuantityInBaseUnit = ingredient.getUnit().toBaseUnit(ingredient.getQuantity());
     double quantityToRemoveInBaseUnit = unit.toBaseUnit(quantity);
 
-    if (currentQuantityInBaseUnit <= quantityToRemoveInBaseUnit) {
+    if (quantityToRemoveInBaseUnit > currentQuantityInBaseUnit) {
+      throw new IllegalArgumentException(
+          "Insufficient quantity of " + name + " to remove the requested amount."
+      );
+    } else if (quantityToRemoveInBaseUnit == currentQuantityInBaseUnit) {
       inventory.remove(key);
     } else {
       double newQuantityInBaseUnit = currentQuantityInBaseUnit - quantityToRemoveInBaseUnit;
@@ -126,10 +131,11 @@ public class FoodInventory {
    * @return a list of ingredients
    */
   public List<Ingredient> getAllIngredientsSortedByName() {
-    List<Ingredient> ingredients = new ArrayList<>(inventory.values());
-    ingredients.sort(Comparator.comparing(Ingredient::getName, String.CASE_INSENSITIVE_ORDER));
-    return ingredients;
+    return inventory.values().stream()
+        .sorted(Comparator.comparing(Ingredient::getName, String.CASE_INSENSITIVE_ORDER))
+        .collect(Collectors.toList());
   }
+
 
   /**
    * Returns a list of ingredients that expire before the specified date.
@@ -143,16 +149,12 @@ public class FoodInventory {
       throw new IllegalArgumentException("Date cannot be null.");
     }
 
-    List<Ingredient> expiringIngredients = new ArrayList<>();
-    for (Ingredient ingredient : inventory.values()) {
-      if (ingredient.getBestBeforeDate().isBefore(date)) {
-        expiringIngredients.add(ingredient);
-      }
-    }
-
-    expiringIngredients.sort(Comparator.comparing(Ingredient::getBestBeforeDate));
-    return expiringIngredients;
+    return inventory.values().stream()
+        .filter(ingredient -> ingredient.getBestBeforeDate().isBefore(date))
+        .sorted(Comparator.comparing(Ingredient::getBestBeforeDate))
+        .collect(Collectors.toList());
   }
+
 
   /**
    * Validates that the name is not null or empty.
