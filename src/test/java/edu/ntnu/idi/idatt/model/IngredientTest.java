@@ -243,8 +243,8 @@ class IngredientTest {
   @DisplayName("Test the toString method")
   @Test
   void testToString() {
-    String expected = String.format("%s: %.2f %s (Best before: %s)", "Milk", 2.0, "L",
-        bestBeforeDate);
+    String expected = String.format("%s: %.2f %s (Best before: %s, Price: %.2f NOK)",
+        "Milk", 2.0, "L", bestBeforeDate, 20.0);
 
     String actual = ingredient.toString();
 

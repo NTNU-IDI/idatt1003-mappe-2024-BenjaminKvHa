@@ -131,7 +131,7 @@ public class Ingredient {
 
   @Override
   public String toString() {
-    return String.format("%s: %.2f %s (Best before: %s)", name, quantity, unit.getAbbreviation(),
-        bestBeforeDate);
+    return String.format("%s: %.2f %s (Best before: %s, Price: %.2f NOK)",
+        name, quantity, unit.getAbbreviation(), bestBeforeDate, pricePerUnit);
   }
 }
