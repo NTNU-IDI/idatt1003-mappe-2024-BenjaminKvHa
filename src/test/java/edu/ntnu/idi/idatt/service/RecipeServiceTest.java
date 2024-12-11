@@ -34,7 +34,7 @@ class RecipeServiceTest {
   @DisplayName("Test adding a new recipe to the cookbook")
   @Test
   void testAddRecipe() {
-    Recipe sandwich = new Recipe(
+    Recipe sandwich = new Recipe( //Recipe from ChatGPT with some changes
         "Sandwich",
         "Simple sandwich",
         "Assemble ingredients between slices of bread.",

@@ -29,7 +29,7 @@ class RecipeTest {
   @DisplayName("Test that the recipe is created correctly with valid inputs")
   @Test
   void testValidConstructor() {
-    String name = "Omelette";
+    String name = "Omelette"; //Recipe from ChatGPT with some changes
     String description = "Simple omelette";
     String preparationMethod = "Beat eggs and cook on a pan.";
     int servings = 2;

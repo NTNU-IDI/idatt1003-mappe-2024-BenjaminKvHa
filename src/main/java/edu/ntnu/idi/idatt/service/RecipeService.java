@@ -82,7 +82,7 @@ public class RecipeService {
    * Populates the cookbook with sample recipes.
    */
   public void populateSampleRecipes() {
-    // Pancake recipe
+    // Pancake recipe. From ChatGPT with some changes
     Recipe pancakeRecipe = new Recipe(
         "Pancakes",
         "Fluffy pancakes",
@@ -94,7 +94,7 @@ public class RecipeService {
     pancakeRecipe.addIngredient("Eggs", 2, edu.ntnu.idi.idatt.model.Unit.PIECE);
     pancakeRecipe.addIngredient("Sugar", 50, edu.ntnu.idi.idatt.model.Unit.GRAM);
 
-    // Omelette recipe
+    // Omelette recipe. From ChatGPT with some changes
     Recipe omeletteRecipe = new Recipe(
         "Omelette",
         "Simple omelette",
